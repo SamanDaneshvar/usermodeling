@@ -102,3 +102,10 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# ----- <My gitignore> -----
+# data, logs, and pickles folders
+data/
+logs/
+pickles/
+# ----- </My gitignore> -----
