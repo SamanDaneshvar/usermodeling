@@ -6,7 +6,7 @@
     Author: Saman Daneshvar
 """
 
-import ProcessDataFiles
+from usermodeling import ProcessDataFiles
 
 import logging
 import os
