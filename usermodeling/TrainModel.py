@@ -261,7 +261,7 @@ def extractFeatures(docs_train, docs_test, presetKey):
     # Define the dictionary of presets. Each “preset” is a dictionary of some values.
     PRESETS_DICTIONARY = {'PAN18_English': {'datasetName': 'PAN 2018 English',
                                             'word_ngram_range': (1, 3),
-                                            'performDimentionalityReduction': False, # %%%% TEMP: No LSA!
+                                            'performDimentionalityReduction': True,
                                             },
                           'PAN18_Spanish': {'datasetName': 'PAN 2018 Spanish',
                                             'word_ngram_range': (1, 2),
@@ -302,9 +302,7 @@ def extractFeatures(docs_train, docs_test, presetKey):
     logger.info("@ %.2f seconds: Finished fit_transforming the training dataset", time.process_time())
     logger.info("Training set word & character ngrams .shape = %s", X_train_ngramsTfidf.shape)
 
-    # %%% Feature names %%%% TEMP: no featureNames!
-    featureNames_ngrams = []
-    # featureNames_ngrams = [wordVectorizer.vocabulary_, charVectorizer.vocabulary_]
+    featureNames_ngrams = [wordVectorizer.vocabulary_, charVectorizer.vocabulary_]
 
     # # TEMP: For debugging purposes
     # ProcessDataFiles.writeIterableToCSV(list(featureNames_ngrams[0].items()), "wordVectorizer.vocabulary_",
@@ -322,7 +320,7 @@ def extractFeatures(docs_train, docs_test, presetKey):
     # • Dimensionality reduction using truncated SVD (aka LSA)
     if PRESET['performDimentionalityReduction']:
         # Build a truncated SVD (LSA) transformer object
-        svd = TruncatedSVD(n_components=300, random_state=43) # %%%
+        svd = TruncatedSVD(n_components=300, random_state=42)
         # Fit the LSI model and perform dimensionality reduction
         X_train_ngramsTfidf_reduced = svd.fit_transform(X_train_ngramsTfidf)
         logger.info("@ %.2f seconds: Finished dimensionality reduction (LSA) on the training dataset", time.process_time())
@@ -704,11 +702,10 @@ def trainAndTestModel(clf, X_train, y_train, X_test, y_test):
     confusionMatrix = metrics.confusion_matrix(y_test, y_predicted)
     logger.info("Confusion matrix:\n%s", confusionMatrix)
 
-    # %%%% TEMP: No plot!
-    # # Plot the confusion matrix
-    # plt.matshow(confusionMatrix)
-    # plt.set_cmap('jet')
-    # plt.show()
+    # Plot the confusion matrix
+    plt.matshow(confusionMatrix)
+    plt.set_cmap('jet')
+    plt.show()
 
 
 def trainModelAndPredict(clf, X_train, y_train, X_test, authorIDs_test, presetKey,
@@ -814,7 +811,8 @@ def main_Development():
         Every time the script runs, it will call this function.
     """
 
-    for presetKey in ("PAN18_English", "PAN18_Spanish", "PAN18_Arabic"):
+    # for presetKey in ("PAN18_English", "PAN18_Spanish", "PAN18_Arabic"): %%
+    for presetKey in ("PAN18_English",):
 
         logger.info("Running main_Development() for preset: %s", presetKey)
 
@@ -823,8 +821,7 @@ def main_Development():
         crossValidateModel(clf, X_train, y_train)
         trainAndTestModel(clf, X_train, y_train, X_test, y_test)
 
-        # %%%
-        # rankImportanceOfFeatures(clf, featureNames, True)
+        rankImportanceOfFeatures(clf, featureNames, True)
 
         # Log run time
         logger.info("@ %.2f seconds: Run finished\n", time.process_time())
