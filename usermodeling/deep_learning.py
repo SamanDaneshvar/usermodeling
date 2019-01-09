@@ -13,16 +13,16 @@ from keras.preprocessing.text import Tokenizer
 
 
 def configureRootLogger():
-    """ This function creates a logger and sets its configurations.
-    """
+    """Create a logger and set its configurations."""
 
     # Create a RootLogger object
     logger = logging.getLogger()
     logger.setLevel(logging.NOTSET)
-    ''' ↳ The logger discards any logging calls with a level of severity lower than the level of the logger.
-        Next, each handler decides to accept/discard the call based on its own level.
-        By setting the level of the logger to NOTSET, we hand the power to handlers, and we don't filter out anything
-        at the entrance. In effect, this is the same as setting the level to DEBUG (lowest level possible).
+    ''' 
+    ↳ The logger discards any logging calls with a level of severity lower than the level of the logger.
+    Next, each handler decides to accept/discard the call based on its own level.
+    By setting the level of the logger to NOTSET, we hand the power to handlers, and we don't filter out anything
+    at the entrance. In effect, this is the same as setting the level to DEBUG (lowest level possible).
     '''
 
     # Create a console handler
@@ -61,8 +61,10 @@ def configureRootLogger():
 
 
 def checkSystemInfo():
-    """This function logs current date and time, computer and user name, and script path.
-    It also ensures that the current working directory is the same as the script directory.
+    """Log system info and set the current working directory
+
+    This function logs current date and time, computer and user name, and script path.
+    It also sets the current working directory = the project directory.
     """
 
     # Log current date and time, computer and user name, and script path
@@ -93,7 +95,8 @@ def checkSystemInfo():
 
 
 def main():
-    """This function is the “main” function.
+    """The “main” function.
+
     Every time the script runs, it will call this function.
     """
 
@@ -103,7 +106,8 @@ def main():
     logger.info("@ %.2f seconds: Run finished\n", time.process_time())
 
 
-''' The following lines will be executed only if this .py file is run as a script,
+''' 
+The following lines will be executed only if this .py file is run as a script,
 and not if it is imported as a module.
 • __name__ is one of the import-related module attributes, which holds the name of the module.
 • A module's __name__ is set to "__main__" when it is running in
