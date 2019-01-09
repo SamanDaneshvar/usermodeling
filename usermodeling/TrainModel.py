@@ -12,7 +12,6 @@ import logging
 import os
 from datetime import datetime
 import time
-import numpy
 import sys
 import argparse
 import re
@@ -110,7 +109,7 @@ def checkSystemInfo():
         logger.info("Current working directory = Project directory"
                     "\n")
     else:
-        logger.warning("Changing working directory from: %s", os.getcwd())
+        logger.info("Changing working directory from: %s", os.getcwd())
         # Change the working directory to the project directory
         os.chdir(projectDirectory)
         logger.info("Current working directory: %s"
@@ -907,6 +906,6 @@ def main_TiraEvaluation():
 if __name__ == "__main__":
     logger = configureRootLogger()
     checkSystemInfo()
-    # main_Development()
+    main_Development()
 
     # main_TiraEvaluation()
