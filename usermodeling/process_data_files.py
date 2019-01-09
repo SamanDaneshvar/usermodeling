@@ -1,11 +1,10 @@
-""" This module loads the dataset of the Author Profiling task at PAN 2018 and pre-processes it.
-    For more information refer to the docstring of the *loadData* function.
+"""Deal with files: Load datasets from files and write output files.
+This module loads the dataset of the Author Profiling task at PAN 2018 and pre-processes it.
+For more information refer to the docstring of the *loadPanData* function.
 
-    Remarks:
-    - The *xml.etree.ElementTree* module is not secure against maliciously constructed data. Make sure the XML files
-    are from a trusted source.
-
-    Author: Saman Daneshvar
+Remarks:
+- The *xml.etree.ElementTree* module is not secure against maliciously constructed data. Make sure the XML files
+are from a trusted source.
 """
 
 import logging
