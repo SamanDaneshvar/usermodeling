@@ -54,9 +54,15 @@ def configureRootLogger():
     consoleHandler = logging.StreamHandler()
     consoleHandler.setLevel(logging.DEBUG)
 
-    # Make sure the *logs* folder is created inside the script directory, regardless of the current working directory
-    scriptDirectory = os.path.dirname(os.path.realpath(sys.argv[0]))
-    LOGS_DIRECTORY = os.path.join(scriptDirectory, "logs")
+    # • Make sure the *logs* folder is created inside the project directory, regardless of the current working directory
+    scriptPath = os.path.realpath(sys.argv[0])
+    # ↳ *sys.argv[0]* contains the script name (it is operating system dependent whether this is a full pathname or not)
+    # ↳ *realpath* eliminates symbolic links and returns the canonical path.
+    # Package directory = the directory that the script file resides in
+    # *os.path.dirname* goes one level up in the directory
+    packageDirectory = os.path.dirname(scriptPath)
+    projectDirectory = os.path.dirname(packageDirectory)
+    LOGS_DIRECTORY = os.path.join(projectDirectory, "logs")
     # Create the directory if it does not exist
     os.makedirs(LOGS_DIRECTORY, exist_ok=True)
     # Define the log file name
@@ -93,15 +99,20 @@ def checkSystemInfo():
     # ↳ *realpath* eliminates symbolic links and returns the canonical path.
     logger.info("Script path: %s", scriptPath)
 
-    # Check if the current working directory is the same as the script directory, and if not change it.
-    scriptDirectory = os.path.dirname(scriptPath)
-    if os.getcwd() == scriptDirectory:
-        logger.info("Current working directory = Script directory"
+    # • Set the project directory as the current working directory.
+    # Package directory = the directory that the script file resides in
+    # *os.path.dirname* goes one level up in the directory
+    packageDirectory = os.path.dirname(scriptPath)
+    #
+    projectDirectory = os.path.dirname(packageDirectory)
+    #
+    if os.getcwd() == projectDirectory:
+        logger.info("Current working directory = Project directory"
                     "\n")
     else:
         logger.warning("Changing working directory from: %s", os.getcwd())
-        # Change the working directory to the script directory
-        os.chdir(scriptDirectory)
+        # Change the working directory to the project directory
+        os.chdir(projectDirectory)
         logger.info("Current working directory: %s"
                     "\n", os.getcwd())
 
@@ -896,5 +907,6 @@ def main_TiraEvaluation():
 if __name__ == "__main__":
     logger = configureRootLogger()
     checkSystemInfo()
-    main_Development()
+    # main_Development()
+
     # main_TiraEvaluation()
