@@ -12,7 +12,7 @@ import sys
 from keras.preprocessing.text import Tokenizer
 
 
-def configureRootLogger():
+def configure_root_logger():
     """Create a logger and set its configurations."""
 
     # Create a RootLogger object
@@ -26,41 +26,41 @@ def configureRootLogger():
     '''
 
     # Create a console handler
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.setLevel(logging.DEBUG)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
 
     # • Make sure the *logs* folder is created inside the project directory, regardless of the current working directory
-    scriptPath = os.path.realpath(sys.argv[0])
+    script_path = os.path.realpath(sys.argv[0])
     # ↳ *sys.argv[0]* contains the script name (it is operating system dependent whether this is a full pathname or not)
     # ↳ *realpath* eliminates symbolic links and returns the canonical path.
     # Package directory = the directory that the script file resides in
     # *os.path.dirname* goes one level up in the directory
-    packageDirectory = os.path.dirname(scriptPath)
-    projectDirectory = os.path.dirname(packageDirectory)
-    LOGS_DIRECTORY = os.path.join(projectDirectory, "logs")
+    package_directory = os.path.dirname(script_path)
+    project_directory = os.path.dirname(package_directory)
+    LOGS_DIRECTORY = os.path.join(project_directory, "logs")
     # Create the directory if it does not exist
     os.makedirs(LOGS_DIRECTORY, exist_ok=True)
     # Define the log file name
     LOG_FILE_NAME = datetime.today().strftime("%Y-%m-%d_%H-%M-%S.log")
-    logFilePath = os.path.join(LOGS_DIRECTORY, LOG_FILE_NAME)
+    log_file_path = os.path.join(LOGS_DIRECTORY, LOG_FILE_NAME)
 
     # Create a file handler
-    fileHandler = logging.FileHandler(logFilePath, encoding="utf-8")
-    fileHandler.setLevel(logging.DEBUG)
+    file_handler = logging.FileHandler(log_file_path, encoding="utf-8")
+    file_handler.setLevel(logging.DEBUG)
 
     # Create a formatter and set it to the handlers
     formatter = logging.Formatter("%(name)-16s: %(levelname)-8s %(message)s")
-    consoleHandler.setFormatter(formatter)
-    fileHandler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+    file_handler.setFormatter(formatter)
 
     # Add the handlers to the logger
-    logger.addHandler(consoleHandler)
-    logger.addHandler(fileHandler)
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
 
     return logger
 
 
-def checkSystemInfo():
+def set_working_directory():
     """Log system info and set the current working directory
 
     This function logs current date and time, computer and user name, and script path.
@@ -71,31 +71,31 @@ def checkSystemInfo():
     logger.info("Current date and time: %s", datetime.today())
     logger.info("Computer and user name: %s, %s", os.getenv('COMPUTERNAME'), os.getlogin())
     # ↳ For a full list of environment variables and their values, call *os.environ*
-    scriptPath = os.path.realpath(sys.argv[0])
+    script_path = os.path.realpath(sys.argv[0])
     # ↳ *sys.argv[0]* contains the script name (it is operating system dependent whether this is a full pathname or not)
     # ↳ *realpath* eliminates symbolic links and returns the canonical path.
-    logger.info("Script path: %s", scriptPath)
+    logger.info("Script path: %s", script_path)
 
     # • Set the project directory as the current working directory.
     # Package directory = the directory that the script file resides in
     # *os.path.dirname* goes one level up in the directory
-    packageDirectory = os.path.dirname(scriptPath)
+    package_directory = os.path.dirname(script_path)
     #
-    projectDirectory = os.path.dirname(packageDirectory)
+    project_directory = os.path.dirname(package_directory)
     #
-    if os.getcwd() == projectDirectory:
+    if os.getcwd() == project_directory:
         logger.info("Current working directory = Project directory"
                     "\n")
     else:
         logger.info("Changing working directory from: %s", os.getcwd())
         # Change the working directory to the project directory
-        os.chdir(projectDirectory)
+        os.chdir(project_directory)
         logger.info("Current working directory: %s"
                     "\n", os.getcwd())
 
 
 def main():
-    """The “main” function.
+    """The main function.
 
     Every time the script runs, it will call this function.
     """
@@ -114,6 +114,6 @@ and not if it is imported as a module.
 the main scope (the scope in which top-level code executes).  
 '''
 if __name__ == "__main__":
-    logger = configureRootLogger()
-    checkSystemInfo()
+    logger = configure_root_logger()
+    set_working_directory()
     main()
