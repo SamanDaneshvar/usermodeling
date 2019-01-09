@@ -182,17 +182,17 @@ def splitTrainAndTestFiles(authorIDs_train, authorIDs_test, truths_train, truths
 
     # Define the dictionary of presets. Each “preset” is a dictionary of some values.
     PRESETS_DICTIONARY = {'PAN18_English': {'datasetName': 'PAN 2018 English',
-                                            'xmlsSourceDirectory': 'data/en/text/',
+                                            'xmlsSourceDirectory': 'data/PAN 2018, Author Profiling/en/text/',
                                             'xmlsDestinationSubdirectory': 'en/text/',
                                             'truthDestinationSubpath': 'en/truth.txt',
                                             },
                           'PAN18_Spanish': {'datasetName': 'PAN 2018 Spanish',
-                                            'xmlsSourceDirectory': 'data/es/text/',
+                                            'xmlsSourceDirectory': 'data/PAN 2018, Author Profiling/es/text/',
                                             'xmlsDestinationSubdirectory': 'es/text/',
                                             'truthDestinationSubpath': 'es/truth.txt',
                                             },
                           'PAN18_Arabic': {'datasetName': 'PAN 2018 Arabic',
-                                            'xmlsSourceDirectory': 'data/ar/text/',
+                                            'xmlsSourceDirectory': 'data/PAN 2018, Author Profiling/ar/text/',
                                             'xmlsDestinationSubdirectory': 'ar/text/',
                                             'truthDestinationSubpath': 'ar/truth.txt',
                                             },
@@ -200,8 +200,8 @@ def splitTrainAndTestFiles(authorIDs_train, authorIDs_test, truths_train, truths
     PRESET = PRESETS_DICTIONARY[presetKey]
 
     # Define the constants: Destination main directory of the training and test datasets
-    TRAIN_DESTINATION_MAIN_DIR = "data/TiraDummy/trainDirectory/"
-    TEST_DESTINATION_MAIN_DIR = "data/TiraDummy/testDirectory/"
+    TRAIN_DESTINATION_MAIN_DIR = "data/PAN 2018, Author Profiling/TiraDummy/trainDirectory/"
+    TEST_DESTINATION_MAIN_DIR = "data/PAN 2018, Author Profiling/TiraDummy/testDirectory/"
 
     # Assemble the destination directories and paths
     xmlsDestinationDirectory_train = os.path.join(TRAIN_DESTINATION_MAIN_DIR, PRESET['xmlsDestinationSubdirectory'])

@@ -123,19 +123,19 @@ def loadDatasets_Development(presetKey):
 
     # Define the dictionary of presets. Each “preset” is a dictionary of some values.
     PRESETS_DICTIONARY = {'PAN18_English': {'datasetName': 'PAN 2018 English',
-                                            'xmlsDirectory': 'data/en/text',
-                                            'truthPath': 'data/en/en.txt',
-                                            'txtsDestinationDirectory': 'data/TXT Files/en',
+                                            'xmlsDirectory': 'data/PAN 2018, Author Profiling/en/text',
+                                            'truthPath': 'data/PAN 2018, Author Profiling/en/en.txt',
+                                            'txtsDestinationDirectory': 'data/PAN 2018, Author Profiling/TXT Files/en',
                                             },
                           'PAN18_Spanish': {'datasetName': 'PAN 2018 Spanish',
-                                            'xmlsDirectory': 'data/es/text',
-                                            'truthPath': 'data/es/es.txt',
-                                            'txtsDestinationDirectory': 'data/TXT Files/es',
+                                            'xmlsDirectory': 'data/PAN 2018, Author Profiling/es/text',
+                                            'truthPath': 'data/PAN 2018, Author Profiling/es/es.txt',
+                                            'txtsDestinationDirectory': 'data/PAN 2018, Author Profiling/TXT Files/es',
                                             },
                           'PAN18_Arabic': {'datasetName': 'PAN 2018 Arabic',
-                                            'xmlsDirectory': 'data/ar/text',
-                                            'truthPath': 'data/ar/ar.txt',
-                                            'txtsDestinationDirectory': 'data/TXT Files/ar',
+                                            'xmlsDirectory': 'data/PAN 2018, Author Profiling/ar/text',
+                                            'truthPath': 'data/PAN 2018, Author Profiling/ar/ar.txt',
+                                            'txtsDestinationDirectory': 'data/PAN 2018, Author Profiling/TXT Files/ar',
                                             },
                           }
     PRESET = PRESETS_DICTIONARY[presetKey]
@@ -196,7 +196,7 @@ def loadDatasets_TiraEvaluation(testDatasetMainDirectory, presetKey):
         "//VBOXSVR/training-datasets/author-profiling/pan18-author-profiling-training-dataset-2018-02-27"
 
     # # TEMP (TIRA): For local testing on SaMaN-Laptop
-    # TRAINING_DATASET_MAIN_DIRECTORY = "C:/Users/Saman/PycharmProjects/PAN18_AuthorProfiling/data/TiraDummy/trainDirectory"
+    # TRAINING_DATASET_MAIN_DIRECTORY = "C:/Users/Saman/PycharmProjects/PAN18_AuthorProfiling/data/PAN 2018, Author Profiling/TiraDummy/trainDirectory"
 
     # # TEMP (TIRA): For local testing on TIRA
     # TRAINING_DATASET_MAIN_DIRECTORY = "E:/author-profiling/pan18-author-profiling-training-dataset-2018-02-27"
@@ -864,8 +864,8 @@ def main_TiraEvaluation():
     predictionXmlsDestinationMainDirectory = commandLineArguments.o
 
     # # TEMP (TIRA): For local testing on SaMaN-Laptop
-    # testDatasetMainDirectory = "data/TiraDummy/testDirectory"
-    # predictionXmlsDestinationMainDirectory = "data/TiraDummy/predictionXmls"
+    # testDatasetMainDirectory = "data/PAN 2018, Author Profiling/TiraDummy/testDirectory"
+    # predictionXmlsDestinationMainDirectory = "data/PAN 2018, Author Profiling/TiraDummy/predictionXmls"
 
     # # TEMP (TIRA): For local testing on TIRA
     # testDatasetMainDirectory = "E:/author-profiling/pan18-author-profiling-training-dataset-2018-02-27"
