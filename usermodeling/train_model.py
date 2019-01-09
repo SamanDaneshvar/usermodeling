@@ -6,7 +6,7 @@
     Author: Saman Daneshvar
 """
 
-from usermodeling import ProcessDataFiles
+from usermodeling import process_data_files
 
 import logging
 import os
@@ -123,19 +123,19 @@ def loadDatasets_Development(presetKey):
 
     # Define the dictionary of presets. Each “preset” is a dictionary of some values.
     PRESETS_DICTIONARY = {'PAN18_English': {'datasetName': 'PAN 2018 English',
-                                            'xmlsDirectory': 'data/en/text',
-                                            'truthPath': 'data/en/en.txt',
-                                            'txtsDestinationDirectory': 'data/TXT Files/en',
+                                            'xmlsDirectory': 'data/PAN 2018, Author Profiling/en/text',
+                                            'truthPath': 'data/PAN 2018, Author Profiling/en/en.txt',
+                                            'txtsDestinationDirectory': 'data/PAN 2018, Author Profiling/TXT Files/en',
                                             },
                           'PAN18_Spanish': {'datasetName': 'PAN 2018 Spanish',
-                                            'xmlsDirectory': 'data/es/text',
-                                            'truthPath': 'data/es/es.txt',
-                                            'txtsDestinationDirectory': 'data/TXT Files/es',
+                                            'xmlsDirectory': 'data/PAN 2018, Author Profiling/es/text',
+                                            'truthPath': 'data/PAN 2018, Author Profiling/es/es.txt',
+                                            'txtsDestinationDirectory': 'data/PAN 2018, Author Profiling/TXT Files/es',
                                             },
                           'PAN18_Arabic': {'datasetName': 'PAN 2018 Arabic',
-                                            'xmlsDirectory': 'data/ar/text',
-                                            'truthPath': 'data/ar/ar.txt',
-                                            'txtsDestinationDirectory': 'data/TXT Files/ar',
+                                            'xmlsDirectory': 'data/PAN 2018, Author Profiling/ar/text',
+                                            'truthPath': 'data/PAN 2018, Author Profiling/ar/ar.txt',
+                                            'txtsDestinationDirectory': 'data/PAN 2018, Author Profiling/TXT Files/ar',
                                             },
                           }
     PRESET = PRESETS_DICTIONARY[presetKey]
@@ -143,8 +143,8 @@ def loadDatasets_Development(presetKey):
     # Load the PAN 2018 training dataset and the truth from the files into lists
     logger.info("Loading the %s training dataset and the truth...", PRESET['datasetName'])
     mergedTweetsOfAuthors, truths, authorIDs, originalTweetLengths =\
-        ProcessDataFiles.loadPanData(PRESET['xmlsDirectory'], PRESET['truthPath'],
-                                     False, PRESET['txtsDestinationDirectory'])
+        process_data_files.loadPanData(PRESET['xmlsDirectory'], PRESET['truthPath'],
+                                       False, PRESET['txtsDestinationDirectory'])
 
     # Split the dataset into balanced (stratified) training and test sets:
     docs_train, docs_test, y_train, y_test, authorIDs_train, authorIDs_test,\
@@ -196,7 +196,7 @@ def loadDatasets_TiraEvaluation(testDatasetMainDirectory, presetKey):
         "//VBOXSVR/training-datasets/author-profiling/pan18-author-profiling-training-dataset-2018-02-27"
 
     # # TEMP (TIRA): For local testing on SaMaN-Laptop
-    # TRAINING_DATASET_MAIN_DIRECTORY = "C:/Users/Saman/PycharmProjects/PAN18_AuthorProfiling/data/TiraDummy/trainDirectory"
+    # TRAINING_DATASET_MAIN_DIRECTORY = "C:/Users/Saman/PycharmProjects/PAN18_AuthorProfiling/data/PAN 2018, Author Profiling/TiraDummy/trainDirectory"
 
     # # TEMP (TIRA): For local testing on TIRA
     # TRAINING_DATASET_MAIN_DIRECTORY = "E:/author-profiling/pan18-author-profiling-training-dataset-2018-02-27"
@@ -209,12 +209,12 @@ def loadDatasets_TiraEvaluation(testDatasetMainDirectory, presetKey):
     # Load the PAN 2018 training dataset and truth from the files into lists
     logger.info("Loading the %s training dataset and truth...", PRESET['datasetName'])
     docs_train, y_train, authorIDs_train, originalTweetLengths_train = \
-        ProcessDataFiles.loadPanData(xmlsDirectory_train, truthPath_train, False, None)
+        process_data_files.loadPanData(xmlsDirectory_train, truthPath_train, False, None)
 
     # Load the PAN 2018 test dataset from the files into lists
     logger.info("Loading the %s test dataset...", PRESET['datasetName'])
     docs_test, y_test, authorIDs_test, originalTweetLengths_test = \
-        ProcessDataFiles.loadPanData(xmlsDirectory_test, None, False, None)
+        process_data_files.loadPanData(xmlsDirectory_test, None, False, None)
     # ↳ Note: truthPath_test will not be provided to the participants. As a result, *truths_test* will be empty.
 
     return docs_train, docs_test, y_train, authorIDs_test
@@ -392,7 +392,7 @@ def extractFeatures_offensiveWords(docs_train, docs_test):
         docs_test, "pickles/countsOfOffensiveWordsDict_test, <HASH>.pickle")
 
     # Load the Flame Dictionary (to produce the list of feature names)
-    flameDictionary, flameExpressionsDict = ProcessDataFiles.loadFlameDictionary()
+    flameDictionary, flameExpressionsDict = process_data_files.loadFlameDictionary()
     ''' ↳
         *flameDictionary*
             Keys:   (string) Expression
@@ -486,7 +486,7 @@ def countOffensiveWords(docs, picklePathPattern=None):
 
     # Load the Flame Dictionary
     # TODO %%: Prevent loading the dictionary every time...
-    flameDictionary, flameExpressionsDict = ProcessDataFiles.loadFlameDictionary()
+    flameDictionary, flameExpressionsDict = process_data_files.loadFlameDictionary()
     ''' ↳
     *flameDictionary*
         Keys:   (string) Expression
@@ -752,8 +752,8 @@ def trainModelAndPredict(clf, X_train, y_train, X_test, authorIDs_test, presetKe
 
     if writeToXmlFiles:
         logger.info("Writing the predictions to XML files.")
-        ProcessDataFiles.writePredictionsToXmls(authorIDs_test, y_predicted,
-                                                xmlsDestinationMainDirectory, PRESET['languageCode'])
+        process_data_files.writePredictionsToXmls(authorIDs_test, y_predicted,
+                                                  xmlsDestinationMainDirectory, PRESET['languageCode'])
 
 
 def rankImportanceOfFeatures(clf, featureNames, writeToFile):
@@ -793,8 +793,8 @@ def rankImportanceOfFeatures(clf, featureNames, writeToFile):
 
     # Write the rankings to a CSV file
     if writeToFile:
-        ProcessDataFiles.writeFeatureImportanceRankingsToCSV(sortedFeatureWeights, sortedFeatureNames,
-                                                             logFilePath=logger.handlers[1].baseFilename)
+        process_data_files.writeFeatureImportanceRankingsToCSV(sortedFeatureWeights, sortedFeatureNames,
+                                                               logFilePath=logger.handlers[1].baseFilename)
 
     # Define constant: Number of top ranking features to plot
     PLOT_TOP = 30
@@ -850,7 +850,7 @@ def main_TiraEvaluation():
         interpreter.exe script.py -c $inputDataset -o $outputDir
     
     For local testing on SaMaN-Laptop, you can use the following command (replace $inputDataset and $outputDir):
-    C:/Users/Saman/Miniconda3/python.exe C:/Users/Saman/PycharmProjects/PAN18_AuthorProfiling/TrainModel.py -c $inputDataset -o $outputDir
+    C:/Users/Saman/Miniconda3/python.exe C:/Users/Saman/PycharmProjects/PAN18_AuthorProfiling/train_model.py -c $inputDataset -o $outputDir
     '''
     # Build a parser
     commandLineArgumentParser = argparse.ArgumentParser()
@@ -864,8 +864,8 @@ def main_TiraEvaluation():
     predictionXmlsDestinationMainDirectory = commandLineArguments.o
 
     # # TEMP (TIRA): For local testing on SaMaN-Laptop
-    # testDatasetMainDirectory = "data/TiraDummy/testDirectory"
-    # predictionXmlsDestinationMainDirectory = "data/TiraDummy/predictionXmls"
+    # testDatasetMainDirectory = "data/PAN 2018, Author Profiling/TiraDummy/testDirectory"
+    # predictionXmlsDestinationMainDirectory = "data/PAN 2018, Author Profiling/TiraDummy/predictionXmls"
 
     # # TEMP (TIRA): For local testing on TIRA
     # testDatasetMainDirectory = "E:/author-profiling/pan18-author-profiling-training-dataset-2018-02-27"
