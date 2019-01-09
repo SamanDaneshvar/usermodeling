@@ -831,7 +831,8 @@ def main_Development():
         crossValidateModel(clf, X_train, y_train)
         trainAndTestModel(clf, X_train, y_train, X_test, y_test)
 
-        rankImportanceOfFeatures(clf, featureNames, True)
+        # %% TODO: This function has bugs.
+        # rankImportanceOfFeatures(clf, featureNames, True)
 
         # Log run time
         logger.info("@ %.2f seconds: Run finished\n", time.process_time())
