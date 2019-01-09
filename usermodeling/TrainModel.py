@@ -703,7 +703,7 @@ def trainAndTestModel(clf, X_train, y_train, X_test, y_test):
                 time.process_time())
 
     # Simple evaluation using numpy.mean
-    logger.info("numpy.mean %%Accuracy: %f", numpy.mean(y_predicted == y_test) * 100)
+    logger.info("np.mean %%Accuracy: %f", np.mean(y_predicted == y_test) * 100)
 
     # Log the classification report
     logger.info("Classification report:\n%s", metrics.classification_report(y_test, y_predicted))
@@ -757,7 +757,7 @@ def trainModelAndPredict(clf, X_train, y_train, X_test, authorIDs_test, presetKe
 
 
 def rankImportanceOfFeatures(clf, featureNames, writeToFile):
-    """ This function ranks the features based on their importance in the classification model—absolute feature
+    """This function ranks the features based on their importance in the classification model—absolute feature
     weight. It then writes the rankings to a CSV file (optional), and plots a number of top-ranking features and
     their weights.
 
@@ -907,5 +907,4 @@ if __name__ == "__main__":
     logger = configureRootLogger()
     checkSystemInfo()
     main_Development()
-
     # main_TiraEvaluation()
