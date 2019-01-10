@@ -73,7 +73,7 @@ def set_working_directory():
     # ↳ *realpath* eliminates symbolic links and returns the canonical path.
 
     # Log the script path
-    logger.info("Script path: %s", script_path)
+    logger.info("Main scope script path: %s", script_path)
 
     # • Set the current working directory = project directory
     # Package directory = the directory that the script file resides in
