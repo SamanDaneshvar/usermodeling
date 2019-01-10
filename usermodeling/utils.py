@@ -61,16 +61,21 @@ def set_working_directory():
     It also sets the current working directory = the project directory.
     """
 
-    # Log current date and time, computer and user name, and script path
+    # Log current date and time, computer and user name
     logger.info("Current date and time: %s", datetime.today())
     logger.info("Computer and user name: %s, %s", os.getenv('COMPUTERNAME'), os.getlogin())
     # ↳ For a full list of environment variables and their values, call *os.environ*
+
+    # Get the script path (of the script that is running in the main scope)
     script_path = os.path.realpath(sys.argv[0])
-    # ↳ *sys.argv[0]* contains the script name (it is operating system dependent whether this is a full pathname or not)
+    # ↳ *sys.argv[0]* contains the script name (it is operating system dependent whether this is a full pathname
+    # or not) of the script that is running in the main scope (the scope in which top-level code executes).
     # ↳ *realpath* eliminates symbolic links and returns the canonical path.
+
+    # Log the script path
     logger.info("Script path: %s", script_path)
 
-    # • Set the project directory as the current working directory.
+    # • Set the current working directory = project directory
     # Package directory = the directory that the script file resides in
     # *os.path.dirname* goes one level up in the directory
     package_directory = os.path.dirname(script_path)
