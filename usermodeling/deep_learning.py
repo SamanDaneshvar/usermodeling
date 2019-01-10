@@ -1,6 +1,6 @@
-"""Perform deep learning on the dataset
+"""Perform deep learning on the datasets
 
-This script trains a deep learning model on the dataset. %%
+This script trains a deep learning model on the datasets. %%
 """
 
 import logging
@@ -99,8 +99,6 @@ def main():
 
     Every time the script runs, it will call this function.
     """
-
-    logger.info("This is the main function!")
 
     # Log run time
     logger.info("@ %.2f seconds: Run finished\n", time.process_time())
