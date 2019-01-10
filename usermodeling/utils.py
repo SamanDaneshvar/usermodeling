@@ -87,3 +87,10 @@ def set_working_directory():
         logger.info("Current working directory: %s"
                     "\n", os.getcwd())
 
+
+# - - - - - - -
+# The following lines will be executed any time this .py file is run as a script or imported as a module.
+
+# Create a logger object. The root logger would be the parent of this logger
+# Note that if you run this .py file as a script, this logger will not function, because it is not configured.
+logger = logging.getLogger(__name__)
