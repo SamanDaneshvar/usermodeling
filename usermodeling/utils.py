@@ -23,27 +23,43 @@ def configure_root_logger():
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.DEBUG)
 
-    # • Make sure the *logs* folder is created inside the project directory, regardless of the current working directory
-    script_path = os.path.realpath(sys.argv[0])
+    # • Get the script path, script (module) name, etc., and deduce the project directory.
+    # We want to make sure the *logs* folder is created inside the project directory, regardless
+    # of the current working directory
+    #
+    SCRIPT_PATH = os.path.realpath(sys.argv[0])
     # ↳ *sys.argv[0]* contains the script name (it is operating system dependent whether this is a full pathname or not)
     # ↳ *realpath* eliminates symbolic links and returns the canonical path.
-    # Package directory = the directory that the script file resides in
+    #
+    SCRIPT_FILENAME = os.path.basename(SCRIPT_PATH)
+    #
+    # Trim the '.py' extension to get the name of the script (module). If the script filename does not have a '.py'
+    # extention, don't trim anything.
+    if SCRIPT_FILENAME[-3:] == '.py':
+        SCRIPT_NAME = SCRIPT_FILENAME[:-3]
+    else:
+        SCRIPT_NAME = SCRIPT_FILENAME
+    #
+    # Package directory = the directory that the script/module file resides in
+    # Project directory = one level higher than the package directory
     # *os.path.dirname* goes one level up in the directory
-    package_directory = os.path.dirname(script_path)
-    project_directory = os.path.dirname(package_directory)
-    LOGS_DIRECTORY = os.path.join(project_directory, "logs")
+    PACKAGE_DIRECTORY = os.path.dirname(SCRIPT_PATH)
+    PROJECT_DIRECTORY = os.path.dirname(PACKAGE_DIRECTORY)
+
+    # Assemble the logs directory
+    LOGS_DIRECTORY = os.path.join(PROJECT_DIRECTORY, 'logs')
     # Create the directory if it does not exist
     os.makedirs(LOGS_DIRECTORY, exist_ok=True)
-    # Define the log file name
-    LOG_FILE_NAME = datetime.today().strftime("%Y-%m-%d_%H-%M-%S.log")
-    log_file_path = os.path.join(LOGS_DIRECTORY, LOG_FILE_NAME)
+    # Assemble the log file name
+    LOG_FILE_NAME = datetime.today().strftime('%Y-%m-%d_%H-%M-%S ') + SCRIPT_NAME + '.log'
+    LOG_FILE_PATH = os.path.join(LOGS_DIRECTORY, LOG_FILE_NAME)
 
     # Create a file handler
-    file_handler = logging.FileHandler(log_file_path, encoding="utf-8")
+    file_handler = logging.FileHandler(LOG_FILE_PATH, encoding='utf-8')
     file_handler.setLevel(logging.DEBUG)
 
     # Create a formatter and set it to the handlers
-    formatter = logging.Formatter("%(name)-18s: %(levelname)-8s %(message)s")
+    formatter = logging.Formatter('%(name)-18s: %(levelname)-8s %(message)s')
     console_handler.setFormatter(formatter)
     file_handler.setFormatter(formatter)
 
@@ -62,8 +78,8 @@ def set_working_directory():
     """
 
     # Log current date and time, computer and user name
-    logger.info("Current date and time: %s", datetime.today())
-    logger.info("Computer and user name: %s, %s", os.getenv('COMPUTERNAME'), os.getlogin())
+    logger.info('Current date and time: %s', datetime.today())
+    logger.info('Computer and user name: %s, %s', os.getenv('COMPUTERNAME'), os.getlogin())
     # ↳ For a full list of environment variables and their values, call *os.environ*
 
     # Get the script path (of the script that is running in the main scope)
@@ -73,7 +89,7 @@ def set_working_directory():
     # ↳ *realpath* eliminates symbolic links and returns the canonical path.
 
     # Log the script path
-    logger.info("Main scope script path: %s", script_path)
+    logger.info('Main scope script path: %s', script_path)
 
     # • Set the current working directory = project directory
     # Package directory = the directory that the script file resides in
@@ -83,14 +99,14 @@ def set_working_directory():
     project_directory = os.path.dirname(package_directory)
     #
     if os.getcwd() == project_directory:
-        logger.info("Current working directory = Project directory"
-                    "\n")
+        logger.info('Current working directory = Project directory'
+                    '\n')
     else:
-        logger.info("Changing working directory from: %s", os.getcwd())
+        logger.info('Changing working directory from: %s', os.getcwd())
         # Change the working directory to the project directory
         os.chdir(project_directory)
-        logger.info("Current working directory: %s"
-                    "\n", os.getcwd())
+        logger.info('Current working directory: %s'
+                    '\n', os.getcwd())
 
 
 # - - - - - - -
