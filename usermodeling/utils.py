@@ -1,4 +1,4 @@
-"""Utils"""
+"""Utilities"""
 
 import logging
 import os
