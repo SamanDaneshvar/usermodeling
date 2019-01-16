@@ -104,11 +104,11 @@ venv.bak/
 .mypy_cache/
 
 # ----- <My gitignore> -----
+# Created by PyCharm
+.idea/
+
 # data, logs, and pickles folders
 data/
 logs/
 pickles/
-
-# Created by PyCharm
-.idea/
 # ----- </My gitignore> -----
