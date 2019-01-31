@@ -6,20 +6,23 @@ Each function is meant to be a temporary "main" function.
 
 from usermodeling import utils
 
+import os
 import time
 
-from keras.preprocessing.text import Tokenizer
-from keras.layers import Embedding
-from keras.datasets import imdb
 from keras import preprocessing
-from keras.models import Sequential
+from keras.datasets import imdb
+from keras.layers import Embedding
 from keras.layers import Flatten, Dense
+from keras.models import Sequential
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+import numpy as np
 
 
 def tutorial_onehot_encoding():
     """One-hot encoding
 
-    Listing 6.3 Using Keras for word-level one-hot encoding
+    Listing 6.3  Using Keras for word-level one-hot encoding
     Page 183 of the book: Deep Learning with Python - François Chollet
     """
 
@@ -39,8 +42,8 @@ def tutorial_onehot_encoding():
 def tutorial_word_embeddings():
     """Word embeddings
 
-    Listing 6.6 Loading the IMDB data for use with an Embedding layer
-    Listing 6.7 Using an Embedding layer and classifier on the IMDB data
+    Listing 6.6  Loading the IMDB data for use with an Embedding layer
+    Listing 6.7  Using an Embedding layer and classifier on the IMDB data
     Page 187 of the book: Deep Learning with Python - François Chollet
     """
     # Number of words to consider as features
@@ -72,19 +75,76 @@ def tutorial_word_embeddings():
 def tutorial_pretrained_word_embeddings():
     """Using pre-trained word embeddings
 
-    Listing 6.8 Processing the labels of the raw IMDB data
-    Listing ### ...
+    Listing 6.8  Processing the labels of the raw IMDB data
+    Listing 6.9  Tokenizing the text of the raw IMDB data
+    Listing 6.10  Parsing the GloVe word-embeddings file
+    Listing ###  ...
     Page 189–### of the book: Deep Learning with Python - François Chollet
+
+    Remarks:
+    - First, download the raw IMDB dataset from http://mng.bz/0tIo (https://s3.amazonaws.com/text-datasets/aclImdb.zip)
+      and uncompress it.
     """
 
-    # Listing 6.8 Processing the labels of the raw IMDB data
-    imdb_dir = ''
+    # Listing 6.8  Processing the labels of the raw IMDB data
+    IMDB_DIR = 'data/IMDB - Keras Tutorial/aclImdb'
+    train_dir = os.path.join(IMDB_DIR, 'train')
+
+    labels = []
+    texts = []
+
+    for label_type in ['neg', 'pos']:
+        dir_name = os.path.join(train_dir, label_type)
+        for fname in os.listdir(dir_name):
+            if fname[-4:] == '.txt':
+                f = open(os.path.join(dir_name, fname), encoding='utf-8')
+                texts.append(f.read())
+                f.close()
+                if label_type == 'neg':
+                    labels.append(0)
+                else:
+                    labels.append(1)
+
+
+    # Listing 6.9  Tokenizing the text of the raw IMDB data
+    maxlen = 100  # Cut off reviews after this many words
+    training_samples = 200
+    validation_samples = 10000
+    max_words = 10000  # Consider only the top 10,000 words in the dataset
+
+    tokenizer = Tokenizer(num_words=max_words)
+    tokenizer.fit_on_texts(texts)  # Builds the word index
+    sequences = tokenizer.texts_to_sequences(texts)  # Turns the strings into lists of integer indices
+    word_index = tokenizer.word_index  # How you can recove the word index that was computed
+    logger.info('Found %s unique tokens.' % len(word_index))
+
+    data = pad_sequences(sequences, maxlen=maxlen)
+
+    labels = np.asarray(labels)
+    logger.info('Shape f data tensor: %s', data.shape)
+    logger.info('Shape f label tensor: %s', labels.shape)
+
+    # Shuffle the data and the labels
+    indices = np.arange(data.shape[0])
+    np.random.shuffle(indices)
+    data = data[indices]
+    labels = labels[indices]
+
+    # Split the data into a training set and a validation set
+    x_train = data[:training_samples]
+    y_train = labels[:training_samples]
+    x_val = data[training_samples: training_samples + validation_samples]
+    y_val = labels[training_samples: training_samples + validation_samples]
+
+
+    # Listing 6.10  Parsing the GloVe word-embeddings file
+    
 
 
 def tutorial_template():
     """Tutorial
 
-    Listing #.# Title
+    Listing #.#  Title
     Page ### of the book: Deep Learning with Python - François Chollet
     """
 
@@ -113,5 +173,5 @@ if __name__ == "__main__":
     utils.set_working_directory()
     # tutorial_onehot_encoding()
     # tutorial_word_embeddings()
-    # tutorial_pretrained_word_embeddings()
+    tutorial_pretrained_word_embeddings()
     main()
