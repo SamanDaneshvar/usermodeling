@@ -4,19 +4,19 @@ This script contains tutorials from the book: Deep Learning with Python - Franç
 Each function is meant to be a temporary "main" function.
 """
 
-from usermodeling import utils
-
 import os
 import time
 
-from keras import preprocessing
 from keras.datasets import imdb
 from keras.layers import Embedding
 from keras.layers import Flatten, Dense
 from keras.models import Sequential
+from keras import preprocessing
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 import numpy as np
+
+from usermodeling import utils
 
 
 def tutorial_onehot_encoding():

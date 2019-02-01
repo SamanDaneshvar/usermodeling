@@ -3,11 +3,11 @@
 This script trains a deep learning model on the datasets. %%
 """
 
-from usermodeling import utils
-
 import time
 
 from keras.preprocessing.text import Tokenizer
+
+from usermodeling import utils
 
 
 def main():
