@@ -62,8 +62,8 @@ def load_datasets_development(preset_key):
     # Load the PAN 2018 training dataset and the truth from the files into lists
     logger.info("Loading the %s training dataset and the truth...", PRESET['dataset_name'])
     merged_tweets_of_authors, truths, author_ids, original_tweet_lengths =\
-        process_data_files.loadPanData(PRESET['xmls_directory'], PRESET['truth_path'],
-                                       False, PRESET['txts_destination_directory'])
+        process_data_files.load_pan_data(PRESET['xmls_directory'], PRESET['truth_path'],
+                                         False, PRESET['txts_destination_directory'])
 
     # Split the dataset into balanced (stratified) training and test sets:
     docs_train, docs_test, y_train, y_test, author_ids_train, author_ids_test,\
@@ -84,7 +84,7 @@ def load_datasets_development(preset_key):
         author_ids_test, docs_test, y_test, original_tweet_lengths_test)))]
 
     # # TEMP: Used for producing a mimic of the **TIRA** environment
-    # ProcessDataFiles.splitTrainAndTestFiles(author_ids_train, author_ids_test, y_train, y_test, preset_key)
+    # ProcessDataFiles.split_train_and_test_files(author_ids_train, author_ids_test, y_train, y_test, preset_key)
 
     return docs_train, docs_test, y_train, y_test
 
@@ -128,12 +128,12 @@ def load_datasets_tira_evaluation(test_dataset_main_directory, preset_key):
     # Load the PAN 2018 training dataset and truth from the files into lists
     logger.info("Loading the %s training dataset and truth...", PRESET['dataset_name'])
     docs_train, y_train, author_ids_train, original_tweet_lengths_train = \
-        process_data_files.loadPanData(xmls_directory_train, truth_path_train, False, None)
+        process_data_files.load_pan_data(xmls_directory_train, truth_path_train, False, None)
 
     # Load the PAN 2018 test dataset from the files into lists
     logger.info("Loading the %s test dataset...", PRESET['dataset_name'])
     docs_test, y_test, author_ids_test, original_tweet_lengths_test = \
-        process_data_files.loadPanData(xmls_directory_test, None, False, None)
+        process_data_files.load_pan_data(xmls_directory_test, None, False, None)
     # ↳ Note: truth_path_test will not be provided to the participants. As a result, *truths_test* will be empty.
 
     return docs_train, docs_test, y_train, author_ids_test
@@ -234,9 +234,9 @@ def extract_features(docs_train, docs_test, preset_key):
     feature_names_ngrams = [word_vectorizer.vocabulary_, char_vectorizer.vocabulary_]
 
     # # TEMP: For debugging purposes
-    # ProcessDataFiles.writeIterableToCSV(list(feature_names_ngrams[0].items()), "word_vectorizer.vocabulary_",
+    # ProcessDataFiles.write_iterable_to_csv(list(feature_names_ngrams[0].items()), "word_vectorizer.vocabulary_",
     #                                     logger.handlers[1].baseFilename)
-    # ProcessDataFiles.writeIterableToCSV(list(feature_names_ngrams[1].items()), "char_vectorizer.vocabulary_",
+    # ProcessDataFiles.write_iterable_to_csv(list(feature_names_ngrams[1].items()), "char_vectorizer.vocabulary_",
     #                                     logger.handlers[1].baseFilename)
 
     ''' Extract the features of the test set (transform test documents to the TF-IDF matrix)
@@ -311,7 +311,7 @@ def extract_features_offensive_words(docs_train, docs_test):
         docs_test, "pickles/counts_of_offensive_words_dict_test, <HASH>.pickle")
 
     # Load the Flame Dictionary (to produce the list of feature names)
-    flame_dictionary, flame_expressions_dict = process_data_files.loadFlameDictionary()
+    flame_dictionary, flame_expressions_dict = process_data_files.load_flame_dictionary()
     ''' ↳
         *flame_dictionary*
             Keys:   (string) Expression
@@ -391,7 +391,7 @@ def count_offensive_words(docs, pickle_path_pattern=None):
             • Values: (NumPy array) Counts of occurrences of expressions in that Flame level. Each row
             represents an author, and each column represents an expression in the Flame level of the key.
 
-        Note: List of expressions can be accessed by calling *ProcessDataFiles.loadFlameDictionary*.
+        Note: List of expressions can be accessed by calling *ProcessDataFiles.load_flame_dictionary*.
     """
 
     pickle_path = generate_pickle_path(docs, pickle_path_pattern)
@@ -405,7 +405,7 @@ def count_offensive_words(docs, pickle_path_pattern=None):
 
     # Load the Flame Dictionary
     # TODO %%: Prevent loading the dictionary every time...
-    flame_dictionary, flame_expressions_dict = process_data_files.loadFlameDictionary()
+    flame_dictionary, flame_expressions_dict = process_data_files.load_flame_dictionary()
     ''' ↳
     *flame_dictionary*
         Keys:   (string) Expression
@@ -671,8 +671,8 @@ def train_model_and_predict(clf, X_train, y_train, X_test, author_ids_test, pres
 
     if write_to_xml_files:
         logger.info("Writing the predictions to XML files.")
-        process_data_files.writePredictionsToXmls(author_ids_test, y_predicted,
-                                                  xmls_destination_main_directory, PRESET['language_code'])
+        process_data_files.write_predictions_to_xmls(author_ids_test, y_predicted,
+                                                     xmls_destination_main_directory, PRESET['language_code'])
 
 
 def rank_importance_of_features(clf, feature_names, write_to_file):
@@ -712,8 +712,8 @@ def rank_importance_of_features(clf, feature_names, write_to_file):
 
     # Write the rankings to a CSV file
     if write_to_file:
-        process_data_files.writeFeatureImportanceRankingsToCSV(sorted_feature_weights, sorted_feature_names,
-                                                               logFilePath=logger.handlers[1].baseFilename)
+        process_data_files.write_feature_importance_rankings_to_csv(sorted_feature_weights, sorted_feature_names,
+                                                                    log_file_path=logger.handlers[1].baseFilename)
 
     # Define constant: Number of top ranking features to plot
     PLOT_TOP = 30
