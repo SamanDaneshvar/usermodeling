@@ -1,7 +1,9 @@
-""" This script builds a gender classification model on the dataset of the Author Profiling task at the
-    PAN 2018 shared task.
-    A linear Support Vector classifier is trained on text features.
-    %%
+"""%%%
+
+This script builds a gender classification model on the dataset of the Author Profiling task at the PAN 2018
+shared task.
+A linear Support Vector classifier is trained on text features.
+%%
 """
 
 import argparse
@@ -36,8 +38,10 @@ logging.getLogger("matplotlib").setLevel(logging.INFO)
 
 
 def load_datasets_development(preset_key):
-    """ This function loads the PAN training dataset and truth by calling the *ProcessDataFiles* module,
-        then splits the dataset into training and test sets.
+    """Load the PAN dataset for the development phase.
+
+    This function loads the PAN training dataset and truth by calling the *ProcessDataFiles* module,
+    then splits the dataset into training and test sets.
     """
 
     # Define the dictionary of presets. Each “preset” is a dictionary of some values.
@@ -90,8 +94,10 @@ def load_datasets_development(preset_key):
 
 
 def load_datasets_tira_evaluation(test_dataset_main_directory, preset_key):
-    """ This function loads the PAN training and test dataset and truth by calling the *ProcessDataFiles* module twice,
-        then passes them along with Author IDs of the test dataset.
+    """Load the PAN dataset for **Tira** evaluation.
+
+    This function loads the PAN training and test dataset and truth by calling the *ProcessDataFiles* module twice,
+    then passes them along with Author IDs of the test dataset.
     """
 
     # Define the dictionary of presets. Each “preset” is a dictionary of some values.
@@ -140,15 +146,22 @@ def load_datasets_tira_evaluation(test_dataset_main_directory, preset_key):
 
 
 def preprocess_tweet(tweet):
-    """ This function gets a string as input and outputs a string, doing the following pre-processing operations:
-        - Replaces repeated character sequences of length 3 or greater with sequences of length 3
-        - Lowercases
-        - List of replacements: %%
-            URL		    <URLURL>
-            @Username   <UsernameMention>
+    """Pre-process a tweet.
 
-        BETA VERSION:
-        - Instead of tokenizing and detokenizing, which is messy, I should directly replace the strings using regex.
+    The following pre-processing operations are done on the tweet:
+    - Replace repeated character sequences of length 3 or greater with sequences of length 3
+    - Lowercase
+    - Replace all URLs and username mentions with the following tags:
+        URL		    <URLURL>
+        @Username   <UsernameMention>
+
+    Args:
+        tweet: String
+    Returns:
+        The pre-processed tweet as String
+
+    IMPROVEMENTS TO MAKE:
+    - Instead of tokenizing and detokenizing, which is messy, the strings should be directly replaced using regex.
     """
 
     replaced_urls = []  # Create an empty list
@@ -181,10 +194,12 @@ def preprocess_tweet(tweet):
 
 
 def extract_features(docs_train, docs_test, preset_key):
-    """ This function builds a transformer (vectorizer) pipeline,
-        fits the transformer to the training set (learns vocabulary and idf),
-        transforms the training set and the test set to their TF-IDF matrix representation,
-        and builds a classifier.
+    """Extract features
+
+    This function builds a transformer (vectorizer) pipeline,
+    fits the transformer to the training set (learns vocabulary and idf),
+    transforms the training set and the test set to their TF-IDF matrix representation,
+    and builds a classifier.
     """
 
     # Define the dictionary of presets. Each “preset” is a dictionary of some values.
@@ -224,9 +239,10 @@ def extract_features(docs_train, docs_test, preset_key):
 
     # Fit (learn vocabulary and IDF) and transform (transform documents to the TF-IDF matrix) the training set
     X_train_ngrams_tfidf = ngrams_vectorizer.fit_transform(docs_train)
-    ''' ↳ Check the following attributes of each of the transformers (analyzers)—*word_vectorizer* and *char_vectorizer*:
-        vocabulary_ : dict. A mapping of terms to feature indices.
-        stop_words_ : set. Terms that were ignored
+    '''
+    ↳ Check the following attributes of each of the transformers (analyzers)—*word_vectorizer* and *char_vectorizer*:
+    vocabulary_ : dict. A mapping of terms to feature indices.
+    stop_words_ : set. Terms that were ignored
     '''
     logger.info("@ %.2f seconds: Finished fit_transforming the training dataset", time.process_time())
     logger.info("Training set word & character ngrams .shape = %s", X_train_ngrams_tfidf.shape)
@@ -239,7 +255,8 @@ def extract_features(docs_train, docs_test, preset_key):
     # ProcessDataFiles.write_iterable_to_csv(list(feature_names_ngrams[1].items()), "char_vectorizer.vocabulary_",
     #                                     logger.handlers[1].baseFilename)
 
-    ''' Extract the features of the test set (transform test documents to the TF-IDF matrix)
+    '''
+    Extract the features of the test set (transform test documents to the TF-IDF matrix)
     Only transform is called on the transformer (vectorizer), because it has already been fit to the training set.
     '''
     X_test_ngrams_tfidf = ngrams_vectorizer.transform(docs_test)
@@ -277,9 +294,11 @@ def extract_features(docs_train, docs_test, preset_key):
     #                                                 feature_names_ngrams
     #                                                 ), axis=0)
 
-    ''' Build a classifier: Linear Support Vector classification
+    '''
+    Build a classifier: Linear Support Vector classification
     - The underlying C implementation of LinearSVC uses a random number generator to select features when fitting the
-    model. References:
+    model.
+    References:
         http://scikit-learn.org/stable/modules/svm.html#tips-on-practical-use
         http://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC.html
     '''
@@ -292,7 +311,9 @@ def extract_features(docs_train, docs_test, preset_key):
 
 
 def extract_features_offensive_words(docs_train, docs_test):
-    """ This function performs the following tasks for the training and test datasets:
+    """Extract offensive words features
+
+    This function performs the following tasks for the training and test datasets:
         1. Gets the counts of offensive words from the *count_offensive_words()* function.
         2. Concatenates the count arrays for the desired Flame levels into X_train and X_test.
         3. Transforms the count matrix (NumPy array) to a normalized TF or TF-IDF representation.
@@ -312,13 +333,14 @@ def extract_features_offensive_words(docs_train, docs_test):
 
     # Load the Flame Dictionary (to produce the list of feature names)
     flame_dictionary, flame_expressions_dict = process_data_files.load_flame_dictionary()
-    ''' ↳
-        *flame_dictionary*
-            Keys:   (string) Expression
-            Values: (int)    Flame level
-        *flame_expressions_dict*
-            Keys:   (int)           Flame level
-            Values: (list: strings) Expressions
+    '''
+    ↳
+    *flame_dictionary*
+        Keys:   (string) Expression
+        Values: (int)    Flame level
+    *flame_expressions_dict*
+        Keys:   (int)           Flame level
+        Values: (list: strings) Expressions
     '''
 
     # Log the min, max, and shape of the offensive words count arrays (just to make sure the pickles were loaded
@@ -352,7 +374,8 @@ def extract_features_offensive_words(docs_train, docs_test):
     # Build a TF-IDF transformer object
     tfidf_transformer = TfidfTransformer(norm='l2', use_idf=False, sublinear_tf=False)
     # ↳ With these parameters, the transformer does not make any changes: norm=None, use_idf=False, sublinear_tf=False
-    ''' ↳ With normalization, each row (= author) is normalized to have a sum of absolute values / squares equal to 1.
+    '''
+    ↳ With normalization, each row (= author) is normalized to have a sum of absolute values / squares equal to 1.
     L^1-norm: Sum of the absolute value of the numbers (here, TF or TF-IDF of the offensive expressions)
     L^2-norm: Sum of the square         of the numbers ”...
     More info: http://www.chioka.in/differences-between-l1-and-l2-as-loss-function-and-regularization/
@@ -376,22 +399,24 @@ def extract_features_offensive_words(docs_train, docs_test):
 
 
 def count_offensive_words(docs, pickle_path_pattern=None):
-    """ This function counts the number of occurrences of all the expressions inside the Flame Dictionary.
-        If the pickled results of the function (corresponding to the same input) already exists, the function is
-        bypassed. If not, after the function is done, the results are stored as pickles.
+    """Count the number of offensive words in the documents.
 
-        Inputs:
+    This function counts the number of occurrences of all the expressions inside the Flame Dictionary.
+    If the pickled results of the function (corresponding to the same input) already exists, the function is
+    bypassed. If not, after the function is done, the results are stored as pickles.
+
+    Args:
         - docs:         (list: strings) List of documents. Each row represents an author and contains one string.
         - pickle_path_pattern: (string) The path pattern for the pickle. This needs to include “<HASH>”, which will be
-        replaced with the hash of the input of the function. Refer to docstrings of the *generate_pickle_path* function.
+    replaced with the hash of the input of the function. Refer to the docstring of the *generate_pickle_path* function.
 
-        Output:
+    Returns:
         - counts_of_expressions_dict: A Python dictionary
             • Keys:   (int)         Flame level
             • Values: (NumPy array) Counts of occurrences of expressions in that Flame level. Each row
-            represents an author, and each column represents an expression in the Flame level of the key.
+                represents an author, and each column represents an expression in the Flame level of the key.
 
-        Note: List of expressions can be accessed by calling *ProcessDataFiles.load_flame_dictionary*.
+    Note: List of expressions can be accessed by calling *ProcessDataFiles.load_flame_dictionary*.
     """
 
     pickle_path = generate_pickle_path(docs, pickle_path_pattern)
@@ -406,7 +431,8 @@ def count_offensive_words(docs, pickle_path_pattern=None):
     # Load the Flame Dictionary
     # TODO %%: Prevent loading the dictionary every time...
     flame_dictionary, flame_expressions_dict = process_data_files.load_flame_dictionary()
-    ''' ↳
+    '''
+    ↳
     *flame_dictionary*
         Keys:   (string) Expression
         Values: (int)    Flame level
@@ -438,25 +464,27 @@ def count_offensive_words(docs, pickle_path_pattern=None):
 
     # Compile regex patterns into regex objects for all expressions, and store them in five separate lists, based on
     # Flame level (similar to *flame_expressions_dict*).
-    ''' - Most regex operations are available as module-level functions as well as methods on compiled
-        regular expressions. The functions are shortcuts that don’t require you to compile a regex object first,
-        but miss some fine-tuning parameters.
-        - Compiling a regex pattern and storing the resulting regex object for reuse is more efficient when the
-        expression will be used several times in a single program. Even though the most recent patterns passed to
-        re.compile() and the module-level matching functions are cached, the size of this cache is limited.
-        More info: https://docs.python.org/3/library/re.html#re.compile
-        Here, we are dealing with 2,600+ expressions, so the built-in cache cannot help. Storing the regex objects,
-        decreased the processing time of each Author from 1.6 seconds to 0.7 seconds (on SaMaN-Laptop).
     '''
-    ''' - In Python code, Regular Expressions will often be written using the raw string notation (r"text").
-        Without it, every backslash in a regular expression would have to be prefixed with another one to escape it.
-        - The shorthand \b matches a word boundary, without consuming any characters. Word boundary characters
-        include space, . ! " ' - * and much more.
-        - Some examples of matches of the /\bWORD\b/ pattern: WORD's, prefix-WORD, WORD-suffix, "WORD".
-        %% TODO: To increase the performance of regex:
-            1. I can combine the patterns using | for all expressions of the same level of Flame.
-            https://stackoverflow.com/questions/1782586/speed-of-many-regular-expressions-in-python#comment1669596_1782712
-            2. I can first use str.find to find potential matches, and then check those matches with regex. 
+    - Most regex operations are available as module-level functions as well as methods on compiled
+    regular expressions. The functions are shortcuts that don’t require you to compile a regex object first,
+    but miss some fine-tuning parameters.
+    - Compiling a regex pattern and storing the resulting regex object for reuse is more efficient when the
+    expression will be used several times in a single program. Even though the most recent patterns passed to
+    re.compile() and the module-level matching functions are cached, the size of this cache is limited.
+    More info: https://docs.python.org/3/library/re.html#re.compile
+    Here, we are dealing with 2,600+ expressions, so the built-in cache cannot help. Storing the regex objects,
+    decreased the processing time of each Author from 1.6 seconds to 0.7 seconds (on SaMaN-Laptop).
+    '''
+    '''
+    - In Python code, Regular Expressions will often be written using the raw string notation (r"text").
+    Without it, every backslash in a regular expression would have to be prefixed with another one to escape it.
+    - The shorthand \b matches a word boundary, without consuming any characters. Word boundary characters
+    include space, . ! " ' - * and much more.
+    - Some examples of matches of the /\bWORD\b/ pattern: WORD's, prefix-WORD, WORD-suffix, "WORD".
+    %% TODO: To increase the performance of regex:
+        1. I can combine the patterns using | for all expressions of the same level of Flame.
+        https://stackoverflow.com/questions/1782586/speed-of-many-regular-expressions-in-python#comment1669596_1782712
+        2. I can first use str.find to find potential matches, and then check those matches with regex. 
     '''
     regex_objects_dict = {1: [], 2: [], 3: [], 4: [], 5: []}  # Create a dictionary of 5 empty lists
     for flame_index in range(1, 6):
@@ -498,17 +526,26 @@ def count_offensive_words(docs, pickle_path_pattern=None):
 
 
 def generate_pickle_path(input_object, pickle_path_pattern):
-    """ This function generates a “pickle path” to store the pickled output of a function, based on its two inputs:
-            1. An object, which is the input of that function.
-            2. A string, which holds the pattern of the pickle path.
-        Here's how:
-        1. *input_object* is an object with any type. We calculate its SHA1 digest (hash value) encoded with the
-        Base 32 encoding. The result is a 32-character, upper-case string (160 ÷ 5 = 32).
-        2. *pickle_path_pattern* is a pattern of the pickle path, containing the placeholder sub-string, “<HASH>”.
-        We replace this sub-string with the hash calculated in step 1, and return the result.
+    """Generate a "pickle path" to store the pickled output of a function
 
-        Remarks:
-        - If *pickle_path_pattern* is None, the function returns None.
+    Args:
+        input_object: An object, which is the input of the function that we want to pickle its output.
+        pickle_path_pattern: A string, which holds the pattern of the pickle path.
+
+    Returns:
+        The pickle path (String)
+
+    Raises:
+        ValueError: If *pickle_path_pattern* does not contain the *HASH_PLACEHOLDER* sub-string.
+
+    Here's how the "pickle path" is generated:
+    1. *input_object* is an object with any type. We calculate its SHA1 digest (hash value) encoded with the
+    Base 32 encoding. The result is a 32-character, upper-case string (160 ÷ 5 = 32).
+    2. *pickle_path_pattern* is the pattern of the pickle path, containing the placeholder sub-string, “<HASH>”.
+    We replace this sub-string with the hash calculated in step 1, and return the result.
+
+    Remarks:
+    - If *pickle_path_pattern* is None, the function returns None.
     """
 
     # Define the constant
@@ -533,19 +570,20 @@ def generate_pickle_path(input_object, pickle_path_pattern):
     # Update the hash object with the *bytes* object. This will calculate the hash value.
     hash_object.update(input_object_as_bytes)
 
-    ''' • Get a digest (hash value) suitable for filenames—alpha-numeric, case insensitive, and
-        relatively short: Base 32
-        - The SHA1 algorithm produces a 160-bit (20-Byte) digest (hash value).
-        - *hash_object.hexdigest()* returns the digest (hash value) as a string object, containing only hexadecimal
-        digits. Each hexadecimal (also “base 16”, or “hex”) digit represents four binary digits (bits). As a result,
-        a SHA1 hash represented as hex will have a length of 160 ÷ 4 = 40 characters.
-        - *hash_object.digest()* returns the digest (hash value) as a *bytes* object.
-        - *base64.b32encode()* encodes a *bytes* object using the Base32 encoding scheme—specified in RFC 3548—and
-        returns the encoded *bytes* object.
-        - The Base 32 encoding is case insensitive, and uses an alphabet of A–Z followed by 2–7 (32 characters).
-        More info: https://tools.ietf.org/html/rfc3548#section-5
-        Each Base 32 character represents 5 bits (2^5 = 32). As a result, a SHA1 hash represented as Base 32 will have
-        a lenght of 160 ÷ 5 = 32 characters.
+    '''
+    • Get a digest (hash value) suitable for filenames—alpha-numeric, case insensitive, and
+    relatively short: Base 32
+    - The SHA1 algorithm produces a 160-bit (20-Byte) digest (hash value).
+    - *hash_object.hexdigest()* returns the digest (hash value) as a string object, containing only hexadecimal
+    digits. Each hexadecimal (also “base 16”, or “hex”) digit represents four binary digits (bits). As a result,
+    a SHA1 hash represented as hex will have a length of 160 ÷ 4 = 40 characters.
+    - *hash_object.digest()* returns the digest (hash value) as a *bytes* object.
+    - *base64.b32encode()* encodes a *bytes* object using the Base32 encoding scheme—specified in RFC 3548—and
+    returns the encoded *bytes* object.
+    - The Base 32 encoding is case insensitive, and uses an alphabet of A–Z followed by 2–7 (32 characters).
+    More info: https://tools.ietf.org/html/rfc3548#section-5
+    Each Base 32 character represents 5 bits (2^5 = 32). As a result, a SHA1 hash represented as Base 32 will have
+    a lenght of 160 ÷ 5 = 32 characters.
     '''
     hash_value_as_bytes = hash_object.digest()
     hash_value_as_base32_encoded_bytes = base64.b32encode(hash_value_as_bytes)
@@ -559,8 +597,12 @@ def generate_pickle_path(input_object, pickle_path_pattern):
 
 
 def hex_hash_object(input_object):
-    """ This function gets an object with any type as input, and returns its SHA1 digest (hash value) as a string,
-        containing 40 hexadecimal digits.
+    """Generates the SHA1 digest (hash value) of an object.
+
+    Args:
+        input_object: An object with any type
+    Returns:
+        The SHA1 digest (hash value) of the *input_object* as a string, containing 40 hexadecimal digits.
     """
 
     # Convert the input object to a *bytes* object (the pickled representation of the input object as a *bytes* object)
@@ -580,17 +622,19 @@ def hex_hash_object(input_object):
 
 
 def cross_validate_model(clf, X_train, y_train):
-    """ This function evaluates the classification model by k-fold cross-validation.
-        The model is trained and tested k times, and all the scores are reported.
+    """Evaluates the classification model by k-fold cross-validation.
+
+    The model is trained and tested k times, and all the scores are reported.
     """
 
     # Build a stratified k-fold cross-validator object
     skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
 
-    ''' Evaluate the score by cross-validation
-        This fits the classification model on the training data, according to the cross-validator
-        and reports the scores.
-        Alternative: sklearn.model_selection.cross_validate
+    '''
+    Evaluate the score by cross-validation
+    This fits the classification model on the training data, according to the cross-validator
+    and reports the scores.
+    Alternative: sklearn.model_selection.cross_validate
     '''
     scores = cross_val_score(clf, X_train, y_train, scoring='accuracy', cv=skf)
 
@@ -605,9 +649,11 @@ def cross_validate_model(clf, X_train, y_train):
 
 
 def train_and_test_model(clf, X_train, y_train, X_test, y_test):
-    """ This function trains the classifier on the training set,
-        predicts the classes on the test set using the trained model,
-        and evaluates the accuracy of the model by comparing it to the truth of the test set.
+    """Train the classifier and test it.
+
+    This function trains the classifier on the training set,
+    predicts the classes on the test set using the trained model,
+    and evaluates the accuracy of the model by comparing it to the truth of the test set.
     """
 
     # Fit the classification model on the whole training set (as opposed to cross-validation)
@@ -639,10 +685,12 @@ def train_and_test_model(clf, X_train, y_train, X_test, y_test):
 
 def train_model_and_predict(clf, X_train, y_train, X_test, author_ids_test, preset_key,
                             write_to_xml_files=True, xmls_destination_main_directory=None, ):
-    """ This function is used only in **TIRA** evaluation.
-        The difference between *train_model_and_predict* and the *train_and_test_model* function is that this function
-        does not get *y_test* as an input, and hence, does not evaluate the accuracy of the model. Instead, it gets the
-        Author IDs of the test dataset and writes the predictions as XML files for out-sourced evaluation.
+    """Train the classifier on the training set and predict the classes for the test set.
+
+    This function is used only in **TIRA** evaluation.
+    The difference between *train_model_and_predict* and the *train_and_test_model* function is that this function
+    does not get *y_test* as an input, and hence, does not evaluate the accuracy of the model. Instead, it gets the
+    Author IDs of the test dataset and writes the predictions as XML files for out-sourced evaluation.
     """
 
     # Define the dictionary of presets. Each “preset” is a dictionary of some values.
@@ -676,18 +724,20 @@ def train_model_and_predict(clf, X_train, y_train, X_test, author_ids_test, pres
 
 
 def rank_importance_of_features(clf, feature_names, write_to_file):
-    """This function ranks the features based on their importance in the classification model—absolute feature
+    """Rank the importance of the features
+
+    This function ranks the features based on their importance in the classification model—absolute feature
     weight. It then writes the rankings to a CSV file (optional), and plots a number of top-ranking features and
     their weights.
 
-    Inputs:
-    - *clf*:          (LinearSVC)     A classifier object. This classifier should be trained.
-    - *feature_names*: (list: strings) Feature names. You can get these from the vectorizer, when it is fit on the
+    Args:
+        clf: (LinearSVC) A classifier object. This classifier should be trained.
+        feature_names: (list: strings) Feature names. You can get these from the vectorizer, when it is fit on the
     training set. For instance, the *vocabulary_* attribute of the vectorizers in scikit-learn.
 
     Returns:
-    - *sorted_feature_weights* (list: floats)  Feature weights, sorted by their absolute value in descending order.
-    - *sorted_feature_names*   (list: strings) Feature names, corresponding to the *sorted_feature_weights* list.
+        sorted_feature_weights: (list: floats) Feature weights, sorted by their absolute value in descending order.
+        sorted_feature_names: (list: strings) Feature names, corresponding to the *sorted_feature_weights* list.
     """
 
     # The NumPy array of feature weights (coefficients in the primal problem)
@@ -736,8 +786,9 @@ def rank_importance_of_features(clf, feature_names, write_to_file):
 
 
 def main_development():
-    """ This function is the “main” function for development.
-        Every time the script runs, it will call this function.
+    """The "main" function for the development phase.
+
+    Every time the script runs, it will call this function.
     """
 
     # for presetKey in ("PAN18_English", "PAN18_Spanish", "PAN18_Arabic"): %%
@@ -758,13 +809,15 @@ def main_development():
 
 
 def main_tira_evaluation():
-    """ This... %%
+    """The "main" function for the Tira evaluation phase.
 
+    Every time the script runs, it will call this function.
     """
 
     logger.info("sys.argv = %s", sys.argv)
 
-    ''' Parse the command line arguments
+    '''
+    Parse the command line arguments
     According to PAN, the submitted script will be executed via command line calls with the following format:
         interpreter.exe script.py -c $inputDataset -o $outputDir
     
@@ -817,11 +870,12 @@ def main_tira_evaluation():
         logger.info("@ %.2f seconds: Run finished\n", time.process_time())
 
 
-''' The following lines will be executed only if this .py file is run as a script,
-    and not if it is imported as a module.
-    • __name__ is one of the import-related module attributes, which holds the name of the module.
-    • A module's __name__ is set to "__main__" when it is running in
-    the main scope (the scope in which top-level code executes).  
+'''
+The following lines will be executed only if this .py file is run as a script,
+and not if it is imported as a module.
+• __name__ is one of the import-related module attributes, which holds the name of the module.
+• A module's __name__ is set to "__main__" when it is running in
+the main scope (the scope in which top-level code executes).  
 '''
 if __name__ == "__main__":
     logger = utils.configure_root_logger()

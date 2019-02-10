@@ -20,11 +20,29 @@ from xml.etree import ElementTree
 
 
 def load_pan_data(xmls_directory, truth_path, write_to_txt_files=False, txts_destination_directory=None):
-    """ This function loads the PAN dataset and the truth, parses the XML and returns:
-        Merged tweets of the authors, the truth, Author IDs, and the original length of the tweets.
-        It also writes the tweets to TXT files (optional).
+    """Load PAN data
 
-        Remarks:
+    This function loads the PAN dataset and the truth, parses the XML and returns:
+    Merged tweets of the authors, the truth, Author IDs, and the original length of the tweets.
+    It also writes the tweets to TXT files (optional).
+
+    Args:
+        xmls_directory: The directory where the XML files of the dataset reside.
+        truth_path: The path of the truth file.
+        write_to_txt_files: (boolean) If True, the XML files will also be written as TXT files after being parsed.
+        txts_destination_directory: The TXT files will be written to this directory.
+
+    Returns:
+        merged_tweets_of_authors: List. Each item is all of the tweets of an author, merged into one string.
+            Refer to the list of replacements in the remarks.
+        truths: List of truths for authors.
+        author_ids: List of Author IDs.
+        original_tweet_lengths: List of original tweet lengths.
+
+    Raises:
+        RuntimeError: If a non-XML file exists inside the *xmls_directory*
+
+    Remarks:
         - Since *xml_filenames* is sorted in ascending order, all the returned lists will also be in the same order
         (sorted in ascending order of the Author IDs).
         - List of replacements:
@@ -32,12 +50,13 @@ def load_pan_data(xmls_directory, truth_path, write_to_txt_files=False, txts_des
             End of Tweet	<EndOfTweet>
     """
 
-    ''' *os.listdir* returns a list containing the name of all files and folders in the given directory.
-        Normally, the list is created in ascending order. However, the Python documentation states,
-        “the list is in arbitrary order”.
-        To ensure consistency and avoid errors in syncing the order of the items among
-        different lists (e.g., *author_ids*, *truths*), we sort the list by calling *sorted*.
-        *sorted()* returns a new sorted list (in ascending lexicographical order) of all the items in an iterable.
+    ''' 
+    *os.listdir* returns a list containing the name of all files and folders in the given directory.
+    Normally, the list is created in ascending order. However, the Python documentation states,
+    “the list is in arbitrary order”.
+    To ensure consistency and avoid errors in syncing the order of the items among
+    different lists (e.g., *author_ids*, *truths*), we sort the list by calling *sorted*.
+    *sorted()* returns a new sorted list (in ascending lexicographical order) of all the items in an iterable.
     '''
     xml_filenames = sorted(os.listdir(xmls_directory))
 
@@ -77,19 +96,19 @@ def load_pan_data(xmls_directory, truth_path, write_to_txt_files=False, txts_des
             raise RuntimeError('Encountered a non-XML file inside the directory: %s' % xml_filename)
             # ↳ This is printf-style String Formatting.
 
-
         # Read the XML file and parse it into a tree
         # Parser is explicitly defined to ensure UTF-8 encoding.
         tree = ElementTree.parse(os.path.join(xmls_directory, xml_filename),
                                  parser=ElementTree.XMLParser(encoding="utf-8"))
         root = tree.getroot()
-        ''' root is the root element of the parsed tree
-            root[0], ..., root[m-1] are the children of root—elements one level below the root.
-            root[0][0], ..., root[0][n-1] are the children of root[0].
-            and so on.
-            
-            Each element has a tag, a dictionary of attributes, and sometimes some text:
-                root[i][j].tag, ”.attrib, ”.text 
+        '''
+        root is the root element of the parsed tree
+        root[0], ..., root[m-1] are the children of root—elements one level below the root.
+        root[0][0], ..., root[0][n-1] are the children of root[0].
+        and so on.
+        
+        Each element has a tag, a dictionary of attributes, and sometimes some text:
+            root[i][j].tag, ”.attrib, ”.text 
         '''
 
         # Add an empty new row to the list. Each row represents an author.
@@ -111,11 +130,12 @@ def load_pan_data(xmls_directory, truth_path, write_to_txt_files=False, txts_des
             tweet = tweet.replace('\n', " <LineFeed> ")
 
             # Create a list of the tweets of this author, to write to a text file and merge, after the loop terminates.
-            ''' Google Python Style Guide: Avoid using the + and += operators to accumulate a string within a loop.
-                Since strings are immutable, this creates unnecessary temporary objects and results in quadratic rather
-                than linear running time.
-                Avoid: merged_tweets_of_authors[author_index] += tweet + " <EndOfTweet> "
-                Instead, append each substring to a list and ''.join the list after the loop terminates.
+            '''
+            Google Python Style Guide: Avoid using the + and += operators to accumulate a string within a loop.
+            Since strings are immutable, this creates unnecessary temporary objects and results in quadratic rather
+            than linear running time.
+            Avoid: merged_tweets_of_authors[author_index] += tweet + " <EndOfTweet> "
+            Instead, append each substring to a list and ''.join the list after the loop terminates.
             '''
             tweets_of_this_author.append(tweet)
 
@@ -140,8 +160,21 @@ def load_pan_data(xmls_directory, truth_path, write_to_txt_files=False, txts_des
 
 
 def load_truth(truth_path, author_ids):
-    """ This function loads the truth from the TXT file,
-        and makes sure the order of the Truth list is the same as the Author IDs list.
+    """Load the truth
+
+    This function loads the truth from the TXT file, and makes sure the order of the Truth list is the same as
+    the Author IDs list.
+
+    Args:
+        truth_path: The path of the truth file.
+        author_ids: The list of Author IDs.
+
+    Returns:
+        The list of the truths.
+
+    Raises:
+        RuntimeError: If for any reason, the function was unable to sync the order of the Truth list and the
+        Author ID list. This error should not happen, but the exception is put in place as a measure of caution.
     """
 
     # Load the Truth file, sort its lines (in ascending order), and store them in a list
@@ -176,7 +209,9 @@ def load_truth(truth_path, author_ids):
 
 
 def split_train_and_test_files(author_ids_train, author_ids_test, truths_train, truths_test, preset_key):
-    """ This function splits the XML files of the dataset into training and test sets according to the results of
+    """Split the dataset files into training and test sets
+
+    This function splits the XML files of the dataset into training and test sets according to the results of
     sklearn's *train_test_split* function. It also writes two separate TXT files for the truth of the training
     and test sets. This function is used for mimicking the **TIRA** environment for local testing.
     """
@@ -243,17 +278,22 @@ def split_train_and_test_files(author_ids_train, author_ids_test, truths_train, 
 
 
 def load_flame_dictionary(path="data/Flame_Dictionary.txt"):
-    """ This function reads the Flame Dictionary from a text file and returns:
-        1. *flame_dictionary*: A Python dictionary with all the entries
+    """Load the Flame dictionary
+
+    This function loads the Flame dictionary from a text file.
+    If there are any duplicate expressions in the text file, the value of the first instance is kept, and the
+    other instances are reported as duplicates.
+
+    Args:
+        path: The path of the Flame dictionary text file
+
+    Returns:
+        *flame_dictionary*: A Python dictionary with all the entries
             Keys:   (string) Expression
             Values: (int)    Flame level
-        2. *flame_expressions_dict*: A Python dictionary with the entries, separated by Flame level, into five lists
+        *flame_expressions_dict*: A Python dictionary with the entries, separated by Flame level, into five lists
             Keys:   (int)           Flame level
             Values: (list: strings) Expressions
-
-        Remarks:
-        - If there are any duplicate expressions in the text file, the value of the first instance is kept, and the
-        other instances are reported as duplicates.
     """
 
     logger.info("Loading the Flame Dictionary from path: %s", os.path.realpath(path))
@@ -290,8 +330,10 @@ def load_flame_dictionary(path="data/Flame_Dictionary.txt"):
 
 
 def write_predictions_to_xmls(author_ids_test, y_predicted, xmls_destination_main_directory, language_code):
-    """ This function is used only in **TIRA** evaluation.
-        It writes the predicted results to XML files with the following format:
+    """Write predictions to XML files
+
+    This function is only used in **TIRA** evaluation.
+    It writes the predicted results to XML files with the following format:
         <author id="author-id" lang="en|es" gender_txt="female|male" gender_img="N/A" gender_comb="N/A" />
     """
 
@@ -321,8 +363,10 @@ def write_predictions_to_xmls(author_ids_test, y_predicted, xmls_destination_mai
 
 
 def write_feature_importance_rankings_to_csv(sorted_feature_weights, sorted_feature_names, log_file_path):
-    """ This function writes the feature importance rankings to a CSV file, next to the log file.
-    - Refer to the docstring of the *write_iterable_to_csv()* function.
+    """Write the feature importance rankings to a CSV file.
+
+    This function writes the feature importance rankings to a CSV file, next to the log file.
+    Refer to the docstring of the *write_iterable_to_csv()* function.
     """
 
     # Determine the path of the output CSV file based on the path of the log file, such that the leading date and
@@ -345,9 +389,12 @@ def write_feature_importance_rankings_to_csv(sorted_feature_weights, sorted_feat
 
 
 def write_iterable_to_csv(iterable, iterable_name, log_file_path):
-    """ This function writes any iterable object to a CSV file next to the log file.
+    """Write an iterable to a CSV file.
+
+    This function writes any iterable object to a CSV file next to the log file.
     - You can get *log_file_path* by calling *logger.handlers[1].baseFilename* in the root module, assuming that
     the file handler is the second handler of the logger.
+
     • CSV Writer objects remarks:
     - *csvwriter.writerow(row)*:   A row must be an iterable of strings or numbers.
     - *csvwriter.writerows(rows)*: *rows* must be a list of row objects, described above.
