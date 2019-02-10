@@ -72,10 +72,11 @@ def load_pan_data(xmls_directory, truth_path, write_to_txt_files=False, txts_des
     for author_index, xml_filename in enumerate(xml_filenames):
         # Make sure only XML files go through
         if not fnmatch.fnmatch(xml_filename, '*.xml'):
-            logger.error("Encountered a non-XML file inside the directory: %s >>> The program will exit now.",
+            logger.error("Encountered a non-XML file inside the directory: %s >>> The program will now exit.",
                          xml_filename)
-            # Exit the program
-            sys.exit()
+            raise RuntimeError('Encountered a non-XML file inside the directory: %s' % xml_filename)
+            # ↳ This is printf-style String Formatting.
+
 
         # Read the XML file and parse it into a tree
         # Parser is explicitly defined to ensure UTF-8 encoding.
@@ -168,8 +169,8 @@ def load_truth(truth_path, author_ids):
         else:
             logger.error("Failed to sync the order of the Truth list and the Author ID list."
                          "Row number: %d >>> The program will now exit.", i)
-            # Exit the program
-            sys.exit()
+            raise RuntimeError('Failed to sync the order of the Truth list and the Author ID list. Row number: %d' % i)
+            # ↳ This is printf-style String Formatting.
 
     return truths
 
