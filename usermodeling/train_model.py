@@ -1,9 +1,10 @@
-"""%%%
+"""Train the model.
 
 This script builds a gender classification model on the dataset of the Author Profiling task at the PAN 2018
-shared task.
-A linear Support Vector classifier is trained on text features.
-%%
+shared task. A linear Support Vector classifier is trained on text features.
+
+The *main_development()* function is run for the development phase and the *main_tira_evaluation()* function for the
+**TIRA** evaluation phase.
 """
 
 import argparse
@@ -119,9 +120,6 @@ def load_datasets_tira_evaluation(test_dataset_main_directory, preset_key):
     # Define the constant and the paths
     TRAINING_DATASET_MAIN_DIRECTORY =\
         "//VBOXSVR/training-datasets/author-profiling/pan18-author-profiling-training-dataset-2018-02-27"
-
-    # # TEMP (TIRA): For local testing on SaMaN-Laptop
-    # TRAINING_DATASET_MAIN_DIRECTORY = "C:/Users/Saman/PycharmProjects/PAN18_AuthorProfiling/data/PAN 2018, Author Profiling/TiraDummy/trainDirectory"
 
     # # TEMP (TIRA): For local testing on TIRA
     # TRAINING_DATASET_MAIN_DIRECTORY = "E:/author-profiling/pan18-author-profiling-training-dataset-2018-02-27"
@@ -429,7 +427,7 @@ def count_offensive_words(docs, pickle_path_pattern=None):
         return unpickled_object
 
     # Load the Flame Dictionary
-    # TODO %%: Prevent loading the dictionary every time...
+    # %% TODO: Prevent loading the dictionary every time...
     flame_dictionary, flame_expressions_dict = process_data_files.load_flame_dictionary()
     '''
     ↳
@@ -473,7 +471,7 @@ def count_offensive_words(docs, pickle_path_pattern=None):
     re.compile() and the module-level matching functions are cached, the size of this cache is limited.
     More info: https://docs.python.org/3/library/re.html#re.compile
     Here, we are dealing with 2,600+ expressions, so the built-in cache cannot help. Storing the regex objects,
-    decreased the processing time of each Author from 1.6 seconds to 0.7 seconds (on SaMaN-Laptop).
+    decreased the processing time of each Author from 1.6 seconds to 0.7 seconds (on my machine).
     '''
     '''
     - In Python code, Regular Expressions will often be written using the raw string notation (r"text").
@@ -482,9 +480,9 @@ def count_offensive_words(docs, pickle_path_pattern=None):
     include space, . ! " ' - * and much more.
     - Some examples of matches of the /\bWORD\b/ pattern: WORD's, prefix-WORD, WORD-suffix, "WORD".
     %% TODO: To increase the performance of regex:
-        1. I can combine the patterns using | for all expressions of the same level of Flame.
+        1. You can combine the patterns using | for all expressions of the same level of Flame.
         https://stackoverflow.com/questions/1782586/speed-of-many-regular-expressions-in-python#comment1669596_1782712
-        2. I can first use str.find to find potential matches, and then check those matches with regex. 
+        2. You can first use str.find to find potential matches, and then check those matches with regex. 
     '''
     regex_objects_dict = {1: [], 2: [], 3: [], 4: [], 5: []}  # Create a dictionary of 5 empty lists
     for flame_index in range(1, 6):
@@ -791,8 +789,11 @@ def main_development():
     Every time the script runs, it will call this function.
     """
 
-    # for presetKey in ("PAN18_English", "PAN18_Spanish", "PAN18_Arabic"): %%
-    for presetKey in ("PAN18_English",):
+    # %% Only in English
+    for presetKey in ("PAN18_English",
+                      # "PAN18_Spanish",
+                      # "PAN18_Arabic",
+                      ):
 
         logger.info("Running main_development() for preset: %s", presetKey)
 
@@ -821,8 +822,11 @@ def main_tira_evaluation():
     According to PAN, the submitted script will be executed via command line calls with the following format:
         interpreter.exe script.py -c $inputDataset -o $outputDir
     
-    For local testing on SaMaN-Laptop, you can use the following command (replace $inputDataset and $outputDir):
-    C:/Users/Saman/Miniconda3/python.exe C:/Users/Saman/PycharmProjects/PAN18_AuthorProfiling/train_model.py -c $inputDataset -o $outputDir
+    For local testing on your machine, you can use the following command:
+        ~/python.exe ~/train_model.py -c $inputDataset -o $outputDir
+    Notes:
+        - Replace $inputDataset and $outputDir.
+        - Replace the ~ characters with the path of your Python interpreter and the path of this script.
     '''
     # Build a parser
     command_line_argument_parser = argparse.ArgumentParser()
@@ -835,10 +839,6 @@ def main_tira_evaluation():
     # ↳ This will be ignored for now.
     prediction_xmls_destination_main_directory = command_line_arguments.o
 
-    # # TEMP (TIRA): For local testing on SaMaN-Laptop
-    # test_dataset_main_directory = "data/PAN 2018, Author Profiling/TiraDummy/testDirectory"
-    # prediction_xmls_destination_main_directory = "data/PAN 2018, Author Profiling/TiraDummy/predictionXmls"
-    #
     # # TEMP (TIRA): For local testing on TIRA
     # test_dataset_main_directory = "E:/author-profiling/pan18-author-profiling-training-dataset-2018-02-27"
     # output_folder_name = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
