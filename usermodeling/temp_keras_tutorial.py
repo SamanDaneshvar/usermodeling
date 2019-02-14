@@ -124,9 +124,12 @@ def tutorial_pretrained_word_embeddings():
 
     # Listing 6.9  Tokenizing the text of the raw IMDB data
     MAXLEN = 100  # Cut off reviews after this many words
-    TRAINING_SAMPLES = 200
-    VALIDATION_SAMPLES = 10000
+    TRAINING_SAMPLES = 20000  # Value in the tutorial: 200
+    VALIDATION_SAMPLES = 5000  # Value in the tutorial: 10,000
     MAX_WORDS = 10000  # Consider only the top 10,000 words in the dataset
+
+    logger.info("Training set: %d samples  |  Validation set: %d samples", TRAINING_SAMPLES, VALIDATION_SAMPLES)
+    logger.info("MAXLEN = %d  |  MAX_WORDS = %d", MAXLEN, MAX_WORDS)
 
     tokenizer = Tokenizer(num_words=MAX_WORDS)
     tokenizer.fit_on_texts(texts)  # Builds the word index
@@ -274,9 +277,9 @@ def tutorial_pretrained_word_embeddings():
     # Listing 6.18  Evaluating the model on the test set
     model.load_weights('data/out/pre_trained_glove_model.h5')
     metrics_values = model.evaluate(x_test, y_test)
+    logger.info('@ %.2f seconds: Finished evaluating the model on the test set', time.process_time())
     for name, value in zip(model.metrics_names, metrics_values):
         logger.info("%s: %s", name, value)
-    logger.info('@ %.2f seconds: Finished evaluating the model on the test set', time.process_time())
 
 
     # logger.info('TEMP!')
