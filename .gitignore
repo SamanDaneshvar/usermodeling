@@ -107,8 +107,7 @@ venv.bak/
 # Created by PyCharm
 .idea/
 
-# data, logs, and pickles folders
+# data and logs folders
 data/
 logs/
-pickles/
 # ----- </My gitignore> -----

@@ -325,9 +325,9 @@ def extract_features_offensive_words(docs_train, docs_test):
 
     # Count the number of occurrences of all the offensive expressions in the training set and test set
     counts_of_offensive_words_dict_train = count_offensive_words(
-        docs_train, "pickles/counts_of_offensive_words_dict_train, <HASH>.pickle")
+        docs_train, "data/out/pickles/counts_of_offensive_words_dict_train, <HASH>.pickle")
     counts_of_offensive_words_dict_test = count_offensive_words(
-        docs_test, "pickles/counts_of_offensive_words_dict_test, <HASH>.pickle")
+        docs_test, "data/out/pickles/counts_of_offensive_words_dict_test, <HASH>.pickle")
 
     # Load the Flame Dictionary (to produce the list of feature names)
     flame_dictionary, flame_expressions_dict = process_data_files.load_flame_dictionary()
