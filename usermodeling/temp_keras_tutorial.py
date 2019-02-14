@@ -89,9 +89,11 @@ def tutorial_pretrained_word_embeddings():
     Listing 6.13  Loading pretrained word embeddings into the Embedding layer
     Listing 6.14  Training and evaluation
     Listing 6.15  Plotting the results
-    Listing ###  ...
+    Listing 6.16
+    Listing 6.17  Tokenizing the data of the test set
+    Listing 6.18  Evaluating the model on the test set
 
-    Page 189–### of the book: Deep Learning with Python - François Chollet
+    Page 189–195 of the book: Deep Learning with Python - François Chollet
 
     Remarks:
     - First, download the raw IMDB dataset from http://mng.bz/0tIo (https://s3.amazonaws.com/text-datasets/aclImdb.zip)
@@ -195,6 +197,7 @@ def tutorial_pretrained_word_embeddings():
 
 
     # Listing 6.13  Loading pretrained word embeddings into the Embedding layer
+    # Comment this section ⇒ Listing 6.16
     model.layers[0].set_weights([embedding_matrix])
     # Freeze the Embedding layer
     model.layers[0].trainable = False
@@ -243,7 +246,40 @@ def tutorial_pretrained_word_embeddings():
 
     plt.show()
 
-    logger.info('TEMP!')
+
+    # Listing 6.17  Tokenizing the data of the test set
+    TEST_DIR = os.path.join(IMDB_DIR, 'test')
+
+    labels = []
+    texts = []
+
+    for label_type in ['neg', 'pos']:
+        dir_name = os.path.join(TEST_DIR, label_type)
+        for fname in sorted(os.listdir(dir_name)):
+            if fname[-4:] == '.txt':
+                with open(os.path.join(dir_name, fname), 'r', encoding='utf-8') as f:
+                    texts.append(f.read())
+                if label_type == 'neg':
+                    labels.append(0)
+                else:
+                    labels.append(1)
+
+    sequences = tokenizer.texts_to_sequences(texts)
+    x_test = pad_sequences(sequences, maxlen=MAXLEN)
+    y_test = np.asarray(labels)
+
+    logger.info('@ %.2f seconds: Finished tokenizing the data of the test set', time.process_time())
+
+
+    # Listing 6.18  Evaluating the model on the test set
+    model.load_weights('data/out/pre_trained_glove_model.h5')
+    metrics_values = model.evaluate(x_test, y_test)
+    for name, value in zip(model.metrics_names, metrics_values):
+        logger.info("%s: %s", name, value)
+    logger.info('@ %.2f seconds: Finished evaluating the model on the test set', time.process_time())
+
+
+    # logger.info('TEMP!')
 
 
 def tutorial_template():
