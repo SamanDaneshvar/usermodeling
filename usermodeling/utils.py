@@ -59,7 +59,7 @@ def configure_root_logger():
     file_handler.setLevel(logging.DEBUG)
 
     # Create a formatter and set it to the handlers
-    formatter = logging.Formatter('%(name)-18s: %(levelname)-8s %(message)s')
+    formatter = logging.Formatter('%(name)-32s: %(levelname)-8s %(message)s')
     console_handler.setFormatter(formatter)
     file_handler.setFormatter(formatter)
 
