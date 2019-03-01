@@ -13,8 +13,8 @@ from keras.layers import Embedding
 from keras.layers import Flatten, Dense
 from keras.models import Sequential
 from keras import preprocessing
-from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
+from keras.preprocessing.text import Tokenizer
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -227,15 +227,15 @@ def tutorial_pretrained_word_embeddings():
     loss = history.history['loss']
     val_loss = history.history['val_loss']
 
-    epochs = range(1, len(acc) + 1)
+    epochs = range(1, len(acc)+1)
 
-    logger.info('Training acc: %s', acc)
-    logger.info('Validation acc: %s', val_acc)
+    logger.info('Training accuracy: %s', acc)
+    logger.info('Validation accuracy: %s', val_acc)
     logger.info('Training loss: %s', loss)
     logger.info('Validation loss: %s', val_loss)
 
-    plt.plot(epochs, acc, 'bo', label='Training acc')
-    plt.plot(epochs, val_acc, 'b', label='Validation acc')
+    plt.plot(epochs, acc, 'bo', label='Training accuracy')
+    plt.plot(epochs, val_acc, 'b', label='Validation accuracy')
     plt.title('Training and validation accuracy')
     plt.legend()
 
@@ -280,9 +280,6 @@ def tutorial_pretrained_word_embeddings():
     logger.info('@ %.2f seconds: Finished evaluating the model on the test set', time.process_time())
     for name, value in zip(model.metrics_names, metrics_values):
         logger.info("%s: %s", name, value)
-
-
-    # logger.info('TEMP!')
 
 
 def tutorial_template():
