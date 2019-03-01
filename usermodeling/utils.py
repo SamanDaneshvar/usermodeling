@@ -7,7 +7,13 @@ import sys
 
 
 def configure_root_logger():
-    """Create a logger and set its configurations."""
+    """Create a logger and set its configurations.
+
+    Returns:
+        logger: The logger object
+        RUN_TIMESTAMP: A string containing the date and time of the run with the format '%Y-%m-%d_%H-%M-%S'
+            This can be used when naming other output files, so that they match the log file.
+    """
 
     # Create a RootLogger object
     logger = logging.getLogger()
@@ -50,8 +56,10 @@ def configure_root_logger():
     LOGS_DIRECTORY = os.path.join(PROJECT_DIRECTORY, 'logs')
     # Create the directory if it does not exist
     os.makedirs(LOGS_DIRECTORY, exist_ok=True)
+    # Create the run timestamp. This can also be used later for output filenames.
+    RUN_TIMESTAMP = datetime.today().strftime('%Y-%m-%d_%H-%M-%S')
     # Assemble the log file name
-    LOG_FILE_NAME = datetime.today().strftime('%Y-%m-%d_%H-%M-%S ') + SCRIPT_NAME + '.log'
+    LOG_FILE_NAME = RUN_TIMESTAMP + ' ' + SCRIPT_NAME + '.log'
     LOG_FILE_PATH = os.path.join(LOGS_DIRECTORY, LOG_FILE_NAME)
 
     # Create a file handler
@@ -67,7 +75,7 @@ def configure_root_logger():
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
 
-    return logger
+    return logger, RUN_TIMESTAMP
 
 
 def set_working_directory():

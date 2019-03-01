@@ -310,7 +310,7 @@ and not if it is imported as a module.
 the main scope (the scope in which top-level code executes).  
 '''
 if __name__ == '__main__':
-    logger = utils.configure_root_logger()
+    logger, RUN_TIMESTAMP = utils.configure_root_logger()
     utils.set_working_directory()
     # tutorial_onehot_encoding()
     # tutorial_word_embeddings()
