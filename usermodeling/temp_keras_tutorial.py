@@ -176,7 +176,7 @@ def tutorial_pretrained_word_embeddings():
     logger.info('@ %.2f seconds: Finished parsing the GloVe word-embeddings file', time.process_time())
 
 
-    # Listing 6.11  Preparing the GloVe word-embeddinggs matrix
+    # Listing 6.11  Preparing the GloVe word-embeddings matrix
     EMBEDDING_DIM = 100
 
     embedding_matrix = np.zeros((MAX_WORDS, EMBEDDING_DIM))
@@ -187,7 +187,7 @@ def tutorial_pretrained_word_embeddings():
                 embedding_matrix[i] = embedding_vector
                 # Words not found in the embedding index will be all zeros.
 
-    logger.info('@ %.2f seconds: Finished preparing the GloVe word-embeddinggs matrix', time.process_time())
+    logger.info('@ %.2f seconds: Finished preparing the GloVe word-embeddings matrix', time.process_time())
 
 
     # L)isting 6.12  Model definition
