@@ -1,13 +1,253 @@
-"""Perform deep learning on the datasets
+"""Perform deep learning experiments on the datasets
 
 This script trains a deep learning model on the datasets. %%
 """
 
+import logging
+import os
 import time
 
+from keras.layers import Dense, Embedding, Flatten
+from keras.models import Sequential
+from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
+from matplotlib import pyplot as plt
+import numpy as np
+from sklearn.model_selection import train_test_split
 
+from usermodeling.classical_ml import preprocess_tweet
+from usermodeling import process_data_files
 from usermodeling import utils
+
+# Change the level of the loggers of some of the imported modules
+logging.getLogger("matplotlib").setLevel(logging.INFO)
+
+
+def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
+    """Load, vectorize and split the PAN 2018 data
+
+    - Load the English training dataset of the PAN 2018 Author Profiling task
+    - Pre-process the raw text (replace URLs, etc.)
+    - Split the dataset into balanced (stratified) training (60%), validation (20%), and test (20%) sets
+    - Vectorize (tokenize) the raw text
+    """
+
+    XMLS_DIRECTORY = 'data/PAN 2018, Author Profiling/en/text'
+    TRUTH_PATH = 'data/PAN 2018, Author Profiling/en/en.txt'
+
+    # Load the raw texts and the labels (truths) from the files into lists
+    merged_tweets, text_labels, author_ids, original_tweet_lengths =\
+        process_data_files.load_pan_data(XMLS_DIRECTORY, TRUTH_PATH)
+
+    # Map textual labels to numeric labels:
+    # 'female' → 0 and 'male' → 1
+    labels = []  # Create an empty list
+    for text_label in text_labels:
+        if text_label == 'female':
+            labels.append(0)
+        elif text_label == 'male':
+            labels.append(1)
+        else:
+            raise ValueError('The labels are expected to be "male" or "female". Encountered label "%s".' % text_label)
+
+    # Process the merged tweets using NLTK's tweet tokenizer to replace repeated characters,
+    # and replace URLs and @Username mentions with <URLURL> and <UsernameMention>
+    processed_merged_tweets = []  # Create an empty list
+    for merged_tweets_of_author in merged_tweets:
+        processed_merged_tweets.append(preprocess_tweet(merged_tweets_of_author))
+
+    # Split the raw dataset into balanced (stratified) training+validation and test sets (split 20% for test set)
+    processed_merged_tweets_trainval, processed_merged_tweets_test, labels_trainval, labels_test,\
+        author_ids_trainval, author_ids_test, = train_test_split(processed_merged_tweets, labels, author_ids,
+                                                                 test_size=0.2, random_state=42, stratify=labels)
+    # ↳ *stratify=labels* selects a balanced sample from the data, with the same class proportion as the *labels* list.
+
+    # • Vectorize (tokenize) the training+validation raw text
+    logger.info("MAX_SEQUENCE_LEN = %s  |  MAX_WORDS = %s", MAX_SEQUENCE_LEN, MAX_WORDS)
+    #
+    tokenizer = Tokenizer(num_words=MAX_WORDS)
+    # Build the word index
+    tokenizer.fit_on_texts(processed_merged_tweets_trainval)
+    # How you can recover the word index that was computed
+    word_index = tokenizer.word_index
+    # ↳ The word_index dictionary includes all the words in the documents.
+    # Turn the strings into lists of integer indices.
+    # Any word other than the *MAX_WORDS* most frequent words will be ignored in this process.
+    sequences_trainval = tokenizer.texts_to_sequences(processed_merged_tweets_trainval)
+    logger.info('@ %.2f seconds: Finished tokenizing the training+validation raw texts', time.process_time())
+    logger.info('Found %d unique tokens.' % len(word_index))
+    #
+    # Turn the list of integers into a 2D integer tensor of shape (samples, maxlen)
+    x_trainval = pad_sequences(sequences_trainval, maxlen=MAX_SEQUENCE_LEN)
+    #
+    y_trainval = np.asarray(labels_trainval)
+
+    # Split the training+validation dataset into balanced (stratified) training and validation sets
+    # Note: 20% (validation set) is 25% of 80% (training+validation), hence the *test_size=0.25* option.
+    x_train, x_val, y_train, y_val, author_ids_train, author_ids_val = \
+        train_test_split(x_trainval, y_trainval, author_ids_trainval,
+                         test_size=0.25, random_state=42, stratify=y_trainval)
+    # ↳ Note: The array-like object given to the *stratify* option should have the same number of samples as the inputs.
+
+    # Vectorize (tokenize) the test set raw text
+    # Note that the tokenizer is already fit on the training+validation set
+    sequences_test = tokenizer.texts_to_sequences(processed_merged_tweets_test)
+    logger.info('@ %.2f seconds: Finished tokenizing the test set raw texts', time.process_time())
+    #
+    x_test = pad_sequences(sequences_test, maxlen=MAX_SEQUENCE_LEN)
+    y_test = np.asarray(labels_test)
+
+    logger.info('Shape of data  (x) tensor = {training: %s | validation: %s | test: %s}',
+                x_train.shape, x_val.shape, x_test.shape)
+    logger.info('Shape of label (y) tensor = {training: %s | validation: %s | test: %s}',
+                y_train.shape, y_val.shape, y_test.shape)
+
+    # TODO: What should the value of MAX_SEQUENCE_LEN be?
+    #   - Required in the Embedding layer. Inconsistency between test set and train+val set in pad_sequences.
+    #   - Should we feed the data to the network on tweet level? (like the PAN '17 Miura paper)
+
+    return x_train, x_val, x_test, y_train, y_val, y_test, word_index
+
+
+def define_and_train_model(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
+    """Define the deep learning model and train it"""
+
+    EMBEDDING_DIM = 100
+
+    # • Define the model
+    model = Sequential()
+    # Embedding layer
+    '''
+    After the Embedding layer, the  activations have shape (samples, MAX_SEQUENCE_LEN, EMBEDDING_DIM)
+    
+    Arguments:
+        input_dim = MAX_WORDS:           Size of the vocabulary
+        output_dim = EMBEDDING_DIM:      Dimension of the dense embedding
+        input_length = MAX_SEQUENCE_LEN: Length of input sequences, when it is constant
+    
+    Shape of input and output:
+        Input:    2D tensor with shape (batch_size, input_length)
+        Output:   3D tensor with shape (batch_size, input_length, output_dim)
+    '''
+    model.add(Embedding(MAX_WORDS, EMBEDDING_DIM, input_length=MAX_SEQUENCE_LEN))
+    # Flatten the 3D tensor of embeddings into a 2D tensor of shape (samples, MAX_SEQUENCE_LEN * EMBEDDING_DIM)
+    model.add(Flatten())
+    model.add(Dense(32, activation='relu'))
+    # Add the classifier on top
+    model.add(Dense(1, activation='sigmoid'))
+    model.summary(print_fn=logger.info)
+
+    # # Load the pre-trained word embeddings (GloVe) into the Embedding layer
+    # glove_embedding_matrix = prepare_glove_embeddings(MAX_WORDS, EMBEDDING_DIM, word_index)
+    # model.layers[0].set_weights([glove_embedding_matrix])
+    # # Freeze the Embedding layer
+    # model.layers[0].trainable = False
+
+    # Compile and train the model (and evaluate it on the validation set)
+    model.compile(optimizer='rmsprop',
+                  loss='binary_crossentropy',
+                  metrics=['acc'],
+                  )
+    history = model.fit(x_train, y_train,
+                        epochs=10,
+                        batch_size=32,
+                        validation_data=(x_val, y_val),
+                        )
+
+    logger.info('@ %.2f seconds: Finished training and validation', time.process_time())
+
+    # • Serialize (save) the model
+    # https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
+    # https://machinelearningmastery.com/save-load-keras-deep-learning-models/
+    MODELS_DIR = 'data/out/models'
+    YAML_FILENAME = RUN_TIMESTAMP + ' ' + 'model architecture' + '.yaml'
+    WEIGHTS_FILENAME = RUN_TIMESTAMP + ' ' + 'model weights' + '.h5'
+    # Save the architecture of the model (not its weights or its training configuration) to a YAML file
+    # YAML (compared to JSON) is more suitable for configuration files.
+    model_as_yaml_string = model.to_yaml()
+    with open(os.path.join(MODELS_DIR, YAML_FILENAME), 'w') as yaml_file:
+        yaml_file.write(model_as_yaml_string)
+    # Save the weights of the model to an HDF5 file
+    model.save_weights(os.path.join(MODELS_DIR, WEIGHTS_FILENAME))
+
+    return model, history
+
+
+def prepare_glove_embeddings(MAX_WORDS, EMBEDDING_DIM, word_index):
+    """Prepare the GloVe embeddings matrix
+
+    Args:
+        MAX_WORDS:     Size of the vocabulary. Consider only the *MAX_WORDS* most frequent words
+        EMBEDDING_DIM: Word embeddings dimension
+        word_index:    A dictionary mapping words to indexes in a Tokenizer object. The words in the dictionary are
+        sorted by frequency of appearance in the dataset. Only the first *MAX_WORDS* items of the dictionary will be
+        used here.
+
+    Returns:
+        The GloVe embedding matrix with shape (MAX_WORDS, EMBEDDING_DIM).
+        This matrix can then be loaded into the Embedding layer of a model to set its weights.
+    """
+
+    # Load GloVe
+    GLOVE_DIR = 'data/GloVe - Twitter Word Embeddings'
+    GLOVE_PATH = os.path.join(GLOVE_DIR, 'glove.twitter.27B.100d.txt')
+    embeddings_index = process_data_files.load_glove_embeddings(GLOVE_PATH)
+
+    # Prepare the GloVe word embeddings matrix
+    embedding_matrix = np.zeros((MAX_WORDS, EMBEDDING_DIM))  # Initialize with zeros
+    #
+    for word, i in word_index.items():
+        if i < MAX_WORDS:
+            # Any word other than the *MAX_WORDS* most frequent words will be ignored.
+            # Note that *word_index* includes all the tokens in the documents, not just the top *MAX_WORDS*.
+            embedding_vector = embeddings_index.get(word)
+            if embedding_vector is not None:
+                embedding_matrix[i] = embedding_vector
+                # Words not found in the embedding index will be all zeros.
+
+    logger.info('@ %.2f seconds: Finished preparing the GloVe word-embeddings matrix', time.process_time())
+
+    return embedding_matrix
+
+
+def plot_training_performance(history):
+    """Plot and log the model's performance over time during training and validation"""
+
+    acc = history.history['acc']
+    val_acc = history.history['val_acc']
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+
+    epochs = range(1, len(acc) + 1)
+
+    logger.info('Training accuracy: %s', acc)
+    logger.info('Validation accuracy: %s', val_acc)
+    logger.info('Training loss: %s', loss)
+    logger.info('Validation loss: %s', val_loss)
+
+    plt.plot(epochs, acc, 'bo', label='Training accuracy')
+    plt.plot(epochs, val_acc, 'b', label='Validation accuracy')
+    plt.title('Training and validation accuracy')
+    plt.legend()
+
+    # Create a new figure
+    plt.figure()
+
+    plt.plot(epochs, loss, 'bo', label='Training loss')
+    plt.plot(epochs, val_loss, 'b', label='Validation loss')
+    plt.title('Training and validation loss')
+    plt.legend()
+
+    plt.show()
+
+
+def evaluate_model_on_test_set(model, x_test, y_test):
+    """Evaluate the model (already trained) on the test set"""
+
+    metrics_values = model.evaluate(x_test, y_test)
+    logger.info('@ %.2f seconds: Finished evaluating the model on the test set', time.process_time())
+    for name, value in zip(model.metrics_names, metrics_values):
+        logger.info("%s = %s", name, value)
 
 
 def main():
@@ -15,6 +255,20 @@ def main():
 
     Every time the script runs, it will call this function.
     """
+
+    logger.info('Experiment notes: --')
+
+    # Size of the vocabulary—Consider only the 10,000 most frequent words in the dataset as features
+    MAX_WORDS = 10 ** 4
+    # Length of sequences—Cut off the text after this many words (among the *MAX_WORDS* most common words)
+    # Can be passed as *None* to the tokenizer, but not to the embedding layer when you are going to connect
+    # Flatten and Dense layers upstream. More info: https://keras.io/layers/embeddings/
+    MAX_SEQUENCE_LEN = 2644
+
+    x_train, x_val, x_test, y_train, y_val, y_test, word_index = load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN)
+    trained_model, history = define_and_train_model(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
+    plot_training_performance(history)
+    evaluate_model_on_test_set(trained_model, x_test, y_test)
 
     # Log run time
     logger.info("@ %.2f seconds: Run finished\n", time.process_time())
