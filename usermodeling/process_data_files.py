@@ -16,6 +16,7 @@ import shutil
 import sys
 import time
 
+import numpy as np
 from xml.etree import ElementTree
 
 
@@ -442,6 +443,25 @@ def write_iterable_to_csv(iterable, iterable_name, log_file_path):
         csv_writer.writerows(iterable)
 
     logger.info('%s was written to CSV file: "%s"', iterable_name, CSV_PATH)
+
+
+def load_glove_embeddings(glove_path):
+    """Read the GloVe word embeddings from file and parse it into a dictionary"""
+
+    embeddings_index = {}  # Create an empty dictionary
+
+    with open(glove_path, 'r', encoding='utf-8') as glove_file:
+        for line in glove_file:
+            values = line.split()
+            word = values[0]
+            coefs = np.asarray(values[1:], dtype='float32')
+            embeddings_index[word] = coefs
+            # ↳ Note that index 0 is not supposed to stand for any word or token—it's a placeholder.
+
+    logger.info('Found %s word vectors in GloVe.', len(embeddings_index))
+    logger.info('@ %.2f seconds: Finished parsing the GloVe word-embeddings file.', time.process_time())
+
+    return embeddings_index
 
 
 '''
