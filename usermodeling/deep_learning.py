@@ -391,8 +391,8 @@ def main():
     # Flatten and Dense layers upstream. More info: https://keras.io/layers/embeddings/
     MAX_SEQUENCE_LEN = 2644
 
-    x_train, x_val, x_test, y_train, y_val, y_test, word_index = load_split_and_vectorize_pan18ap_data(MAX_WORDS,
-                                                                                                       MAX_SEQUENCE_LEN)
+    (x_train, x_val, x_test,
+     y_train, y_val, y_test, word_index) = load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN)
     trained_model, history = define_and_train_model(x_train, x_val, y_train, y_val,
                                                     MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
     serialize_model_and_history(trained_model, history)
