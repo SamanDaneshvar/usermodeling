@@ -5,6 +5,7 @@ This script trains a deep learning model on the datasets.
 
 import logging
 import os
+import pickle
 import random as rn
 import time
 
@@ -143,7 +144,6 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     #   - Required in the Embedding layer. Inconsistency between test set and train+val set in pad_sequences.
     #   - Should we feed the data to the network on tweet level? (like the PAN '17 Miura paper)
 
-    # TODO: The randomness of experiment results: where does it come from? Answer: *shuffle* option in *model.fit()*
     # TODO: GloVe: why did it fail?
 
     return x_train, x_val, x_test, y_train, y_val, y_test, word_index
@@ -196,12 +196,14 @@ def define_and_train_model(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUEN
 
     logger.info('@ %.2f seconds: Finished training and validation', time.process_time())
 
-    # • Serialize (save) the model
+    # • Serialize (save) the trained model
     # https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
     # https://machinelearningmastery.com/save-load-keras-deep-learning-models/
     MODELS_DIR = 'data/out/models'
     YAML_FILENAME = RUN_TIMESTAMP + ' ' + 'model architecture' + '.yaml'
     WEIGHTS_FILENAME = RUN_TIMESTAMP + ' ' + 'model weights' + '.h5'
+    # Create the directory if it does not exist.
+    os.makedirs(os.path.dirname(MODELS_DIR), exist_ok=True)
     # Save the architecture of the model (not its weights or its training configuration) to a YAML file
     # YAML (compared to JSON) is more suitable for configuration files.
     model_as_yaml_string = model.to_yaml()
@@ -209,6 +211,15 @@ def define_and_train_model(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUEN
         yaml_file.write(model_as_yaml_string)
     # Save the weights of the model to an HDF5 file
     model.save_weights(os.path.join(MODELS_DIR, WEIGHTS_FILENAME))
+
+    # • Pickle *history.history*
+    PICKLES_DIR = 'data/out/pickles'
+    HISTORY_PICKLE_FILENAME = RUN_TIMESTAMP + ' ' + 'history' + '.pickle'
+    # Create the directory if it does not exist.
+    os.makedirs(os.path.dirname(PICKLES_DIR), exist_ok=True)
+    # Pickle
+    with open(os.path.join(PICKLES_DIR, HISTORY_PICKLE_FILENAME), 'wb') as pickle_output_file:
+        pickle.dump(history.history, pickle_output_file)
 
     return model, history
 
@@ -251,7 +262,11 @@ def prepare_glove_embeddings(MAX_WORDS, EMBEDDING_DIM, word_index):
 
 
 def plot_training_performance(history):
-    """Plot and log the model's performance over time during training and validation"""
+    """Plot and log the model's performance over time during training and validation
+
+    Args:
+        history: The history object returned by the *model.fit* method in Keras.
+    """
 
     acc = history.history['acc']
     val_acc = history.history['val_acc']
@@ -276,6 +291,56 @@ def plot_training_performance(history):
     plt.plot(epochs, loss, 'bo', label='Training loss')
     plt.plot(epochs, val_loss, 'b', label='Validation loss')
     plt.title('Training and validation loss')
+    plt.legend()
+
+    plt.show()
+
+
+def plot_training_performance_from_pickle(run_timestamp):
+    """Load a pickled *history.history* dictionary and plot its information
+
+    This function gets a timestamp string as input and loads its corresponding pickled *history.history* dictionary.
+    The history object is returned by the *model.fit* method in Keras. The *history.history* dictionary is an attribute
+    of history which contains the performance of a model over time during training and validation.
+    The function will plot this information.
+
+    This is useful to review and compare the performance of the models in previous experiments.
+
+    Args:
+        run_timestamp: A string containing the date and time of the target run with the format '%Y-%m-%d_%H-%M-%S'.
+        This string can also contain other characters after the timestamp. As long as the string begins with a
+        timestamp in the above format, and there is some whitespace characters between the timestamp and the rest of
+        the string, the rest of the string will be trimmed and ignored.
+    """
+
+    # In case the input character contains other characters after the timestring, trim the rest of it
+    run_timestamp = run_timestamp.split()[0]
+
+    PICKLES_DIR = 'data/out/pickles'
+    HISTORY_PICKLE_FILENAME = run_timestamp + ' ' + 'history' + '.pickle'
+
+    # Unpickle the *history.history* dictionary
+    with open(os.path.join(PICKLES_DIR, HISTORY_PICKLE_FILENAME), 'rb') as pickle_input_file:
+        history_dot_history = pickle.load(pickle_input_file)
+
+    acc = history_dot_history['acc']
+    val_acc = history_dot_history['val_acc']
+    loss = history_dot_history['loss']
+    val_loss = history_dot_history['val_loss']
+
+    epochs = range(1, len(acc) + 1)
+
+    plt.plot(epochs, acc, 'bo', label='Training accuracy')
+    plt.plot(epochs, val_acc, 'b', label='Validation accuracy')
+    plt.title(run_timestamp + ' ' + 'Training and validation accuracy')
+    plt.legend()
+
+    # Create a new figure
+    plt.figure()
+
+    plt.plot(epochs, loss, 'bo', label='Training loss')
+    plt.plot(epochs, val_loss, 'b', label='Validation loss')
+    plt.title(run_timestamp + ' ' + 'Training and validation loss')
     plt.legend()
 
     plt.show()
@@ -339,3 +404,4 @@ if __name__ == "__main__":
     logger, RUN_TIMESTAMP = utils.configure_root_logger()
     utils.set_working_directory()
     main()
+    # plot_training_performance_from_pickle('2019-03-06_00-05-50 deep_learning')
