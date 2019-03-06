@@ -9,7 +9,6 @@ The *main_development()* function is run for the development phase and the *main
 
 import argparse
 import base64
-from datetime import datetime
 import hashlib
 import logging
 import os
@@ -592,31 +591,6 @@ def generate_pickle_path(input_object, pickle_path_pattern):
     pickle_path = pickle_path_pattern.replace(HASH_PLACEHOLDER, hash_value_as_base32_encoded_string)
 
     return pickle_path
-
-
-def hex_hash_object(input_object):
-    """Generates the SHA1 digest (hash value) of an object.
-
-    Args:
-        input_object: An object with any type
-    Returns:
-        The SHA1 digest (hash value) of the *input_object* as a string, containing 40 hexadecimal digits.
-    """
-
-    # Convert the input object to a *bytes* object (the pickled representation of the input object as a *bytes* object)
-    input_object_as_bytes = pickle.dumps(input_object)
-    # ↳ An inferior alternative could be *str(input_object).encode("utf-8")*
-
-    # Create a hash object that uses the SHA1 algorithm
-    hash_object = hashlib.sha1()
-
-    # Update the hash object with the *bytes* object. This will calculate the hash value.
-    hash_object.update(input_object_as_bytes)
-
-    # Get the hexadecimal digest (hash value)
-    hex_hash_value = hash_object.hexdigest()
-
-    return hex_hash_value
 
 
 def cross_validate_model(clf, X_train, y_train):

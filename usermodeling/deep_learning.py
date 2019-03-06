@@ -18,7 +18,6 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
-from usermodeling.classical_ml import hex_hash_object  # TEMP %%%
 from usermodeling.classical_ml import preprocess_tweet
 from usermodeling import process_data_files
 from usermodeling import utils
@@ -315,8 +314,8 @@ def main():
                                                     MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
 
     logger.info('Experiment reproducibility check (SHA1 hash):')
-    logger.info('    trained_model: %s', hex_hash_object(trained_model))
-    logger.info('    history:       %s', hex_hash_object(history))
+    logger.info('    trained_model: %s', utils.hex_hash_object(trained_model))
+    logger.info('    history:       %s', utils.hex_hash_object(history))
 
     plot_training_performance(history)
     evaluate_model_on_test_set(trained_model, x_test, y_test)

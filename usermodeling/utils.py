@@ -1,8 +1,10 @@
 """Utilities"""
 
 from datetime import datetime
+import hashlib
 import logging
 import os
+import pickle
 import sys
 
 
@@ -115,6 +117,33 @@ def set_working_directory():
         os.chdir(project_directory)
         logger.info('Current working directory: %s'
                     '\n', os.getcwd())
+
+
+def hex_hash_object(input_object):
+    """Generate the SHA1 digest (hash value) of an object as a hexadecimal string.
+
+    This is useful for comparing two objects or one object in different runs.
+
+    Args:
+        input_object: An object with any type
+    Returns:
+        The SHA1 digest (hash value) of the *input_object* as a string, containing 40 hexadecimal digits.
+    """
+
+    # Convert the input object to a *bytes* object (the pickled representation of the input object as a *bytes* object)
+    input_object_as_bytes = pickle.dumps(input_object)
+    # ↳ An inferior alternative could be *str(input_object).encode("utf-8")*
+
+    # Create a hash object that uses the SHA1 algorithm
+    hash_object = hashlib.sha1()
+
+    # Update the hash object with the *bytes* object. This will calculate the hash value.
+    hash_object.update(input_object_as_bytes)
+
+    # Get the hexadecimal digest (hash value)
+    hex_hash_value = hash_object.hexdigest()
+
+    return hex_hash_value
 
 
 '''
