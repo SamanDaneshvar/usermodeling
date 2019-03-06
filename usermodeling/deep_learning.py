@@ -1,6 +1,6 @@
 """Perform deep learning experiments on the datasets
 
-This script trains a deep learning model on the datasets. %%
+This script trains a deep learning model on the datasets.
 """
 
 import logging
@@ -152,7 +152,7 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
 def define_and_train_model(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
     """Define the deep learning model and train it"""
 
-    EMBEDDING_DIM = 8  # TEMP %%%
+    EMBEDDING_DIM = 100
 
     # • Define the model
     model = Sequential()
