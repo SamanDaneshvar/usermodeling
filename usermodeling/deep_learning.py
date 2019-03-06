@@ -5,8 +5,10 @@ This script trains a deep learning model on the datasets. %%
 
 import logging
 import os
+import random as rn
 import time
 
+from keras import backend as K
 from keras.layers import Dense, Embedding, Flatten
 from keras.models import Sequential
 from keras.preprocessing.sequence import pad_sequences
@@ -14,13 +16,49 @@ from keras.preprocessing.text import Tokenizer
 from matplotlib import pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
+import tensorflow as tf
 
+from usermodeling.classical_ml import hex_hash_object  # TEMP %%%
 from usermodeling.classical_ml import preprocess_tweet
 from usermodeling import process_data_files
 from usermodeling import utils
 
 # Change the level of the loggers of some of the imported modules
 logging.getLogger("matplotlib").setLevel(logging.INFO)
+
+
+def ensure_reproducibility():
+    """Ensure reproducible results
+
+    Ensure the reproducibility of the experiments by seeding the pseudo-random number generators and some other
+    TensorFlow and Keras session configurations.
+
+    Usage: Run this function before building your model. Moreover, run the *keras.backend.clear_session()* function
+    after your experiment to restart with a fresh session.
+
+    - Note that the most robust way to report results and compare models is to repeat your experiment many times (30+)
+    and use summary statistics.
+
+    References:
+        https://keras.io/getting-started/faq/#how-can-i-obtain-reproducible-results-using-keras-during-development
+        https://machinelearningmastery.com/reproducible-results-neural-networks-keras/
+        https://stackoverflow.com/a/46886311/9933071
+    """
+
+    # Set the random seed for NumPy. Keras gets its source of randomness from NumPy.
+    np.random.seed(42)
+    # Set the random seed for the TensorFlow backend.
+    tf.set_random_seed(123)
+
+    # Set the random seed for the core Python random number generator.
+    # Not sure of the effectiveness of this, but it is recommended by Keras documentation.
+    rn.seed(1234)
+
+    # Force TensorFlow to use a single thread. Multiple threads are a potential source of non-reproducible results.
+    session_conf = tf.ConfigProto(intra_op_parallelism_threads=1,
+                                  inter_op_parallelism_threads=1)
+    sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+    K.set_session(sess)
 
 
 def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
@@ -106,13 +144,16 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     #   - Required in the Embedding layer. Inconsistency between test set and train+val set in pad_sequences.
     #   - Should we feed the data to the network on tweet level? (like the PAN '17 Miura paper)
 
+    # TODO: The randomness of experiment results: where does it come from? Answer: *shuffle* option in *model.fit()*
+    # TODO: GloVe: why did it fail?
+
     return x_train, x_val, x_test, y_train, y_val, y_test, word_index
 
 
 def define_and_train_model(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
     """Define the deep learning model and train it"""
 
-    EMBEDDING_DIM = 100
+    EMBEDDING_DIM = 8  # TEMP %%%
 
     # • Define the model
     model = Sequential()
@@ -258,6 +299,9 @@ def main():
 
     logger.info('Experiment notes: --')
 
+    # Ensure reproducible results
+    ensure_reproducibility()
+
     # Size of the vocabulary—Consider only the 10,000 most frequent words in the dataset as features
     MAX_WORDS = 10 ** 4
     # Length of sequences—Cut off the text after this many words (among the *MAX_WORDS* most common words)
@@ -265,10 +309,21 @@ def main():
     # Flatten and Dense layers upstream. More info: https://keras.io/layers/embeddings/
     MAX_SEQUENCE_LEN = 2644
 
-    x_train, x_val, x_test, y_train, y_val, y_test, word_index = load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN)
-    trained_model, history = define_and_train_model(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
+    x_train, x_val, x_test, y_train, y_val, y_test, word_index = load_split_and_vectorize_pan18ap_data(MAX_WORDS,
+                                                                                                       MAX_SEQUENCE_LEN)
+    trained_model, history = define_and_train_model(x_train, x_val, y_train, y_val,
+                                                    MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
+
+    logger.info('Experiment reproducibility check (SHA1 hash):')
+    logger.info('    trained_model: %s', hex_hash_object(trained_model))
+    logger.info('    history:       %s', hex_hash_object(history))
+
     plot_training_performance(history)
     evaluate_model_on_test_set(trained_model, x_test, y_test)
+
+    # Destroy the current TF graph and create a new one, to ensure reproducible results.
+    # This is also useful to avoid clutter from old models/layers.
+    K.clear_session()
 
     # Log run time
     logger.info("@ %.2f seconds: Run finished\n", time.process_time())
