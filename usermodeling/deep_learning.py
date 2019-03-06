@@ -101,7 +101,7 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     # ↳ *stratify=labels* selects a balanced sample from the data, with the same class proportion as the *labels* list.
 
     # • Vectorize (tokenize) the training+validation raw text
-    logger.info("MAX_SEQUENCE_LEN = %s  |  MAX_WORDS = %s", MAX_SEQUENCE_LEN, MAX_WORDS)
+    logger.info("MAX_SEQUENCE_LEN = %s  |  MAX_WORDS = %s", format(MAX_SEQUENCE_LEN, ',d'), format(MAX_WORDS, ',d'))
     #
     tokenizer = Tokenizer(num_words=MAX_WORDS)
     # Build the word index
@@ -113,7 +113,7 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     # Any word other than the *MAX_WORDS* most frequent words will be ignored in this process.
     sequences_trainval = tokenizer.texts_to_sequences(processed_merged_tweets_trainval)
     logger.info('@ %.2f seconds: Finished tokenizing the training+validation raw texts', time.process_time())
-    logger.info('Found %d unique tokens.' % len(word_index))
+    logger.info('Found %s unique tokens.' % format(len(word_index), ',d'))
     #
     # Turn the list of integers into a 2D integer tensor of shape (samples, maxlen)
     x_trainval = pad_sequences(sequences_trainval, maxlen=MAX_SEQUENCE_LEN)
