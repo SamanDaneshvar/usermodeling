@@ -196,31 +196,6 @@ def define_and_train_model(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUEN
 
     logger.info('@ %.2f seconds: Finished training and validation', time.process_time())
 
-    # • Serialize (save) the trained model
-    # https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
-    # https://machinelearningmastery.com/save-load-keras-deep-learning-models/
-    MODELS_DIR = 'data/out/models'
-    YAML_FILENAME = RUN_TIMESTAMP + ' ' + 'model architecture' + '.yaml'
-    WEIGHTS_FILENAME = RUN_TIMESTAMP + ' ' + 'model weights' + '.h5'
-    # Create the directory if it does not exist.
-    os.makedirs(os.path.dirname(MODELS_DIR), exist_ok=True)
-    # Save the architecture of the model (not its weights or its training configuration) to a YAML file
-    # YAML (compared to JSON) is more suitable for configuration files.
-    model_as_yaml_string = model.to_yaml()
-    with open(os.path.join(MODELS_DIR, YAML_FILENAME), 'w') as yaml_file:
-        yaml_file.write(model_as_yaml_string)
-    # Save the weights of the model to an HDF5 file
-    model.save_weights(os.path.join(MODELS_DIR, WEIGHTS_FILENAME))
-
-    # • Pickle *history.history*
-    PICKLES_DIR = 'data/out/pickles'
-    HISTORY_PICKLE_FILENAME = RUN_TIMESTAMP + ' ' + 'history' + '.pickle'
-    # Create the directory if it does not exist.
-    os.makedirs(os.path.dirname(PICKLES_DIR), exist_ok=True)
-    # Pickle
-    with open(os.path.join(PICKLES_DIR, HISTORY_PICKLE_FILENAME), 'wb') as pickle_output_file:
-        pickle.dump(history.history, pickle_output_file)
-
     return model, history
 
 
@@ -259,6 +234,49 @@ def prepare_glove_embeddings(MAX_WORDS, EMBEDDING_DIM, word_index):
     logger.info('@ %.2f seconds: Finished preparing the GloVe word-embeddings matrix', time.process_time())
 
     return embedding_matrix
+
+
+def serialize_model_and_history(model, history):
+    """ Serialize (save) the trained model and its performance over time during training and validation
+
+    - Log the SHA1 hash of the trained model and the history object (as an experiment reproducibility check)
+    - Save the architecture of the model to a YAML file
+    - Save the weights of the model to an HDF5 file
+    - Pickle *history.history*—the record of training and validation loss and metrics at successive epochs
+
+    Args:
+        model: A trained model
+        history: The history object returned by the *model.fit* method
+    """
+
+    logger.info('Experiment reproducibility check (SHA1 hash):')
+    logger.info('    trained model: %s', utils.hex_hash_object(model))
+    logger.info('    history:       %s', utils.hex_hash_object(history))
+
+    # • Serialize (save) the trained model
+    # https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model
+    # https://machinelearningmastery.com/save-load-keras-deep-learning-models/
+    MODELS_DIR = 'data/out/models'
+    YAML_FILENAME = RUN_TIMESTAMP + ' ' + 'model architecture' + '.yaml'
+    WEIGHTS_FILENAME = RUN_TIMESTAMP + ' ' + 'model weights' + '.h5'
+    # Create the directory if it does not exist.
+    os.makedirs(os.path.dirname(MODELS_DIR), exist_ok=True)
+    # Save the architecture of the model (not its weights or its training configuration) to a YAML file
+    # YAML (compared to JSON) is more suitable for configuration files.
+    model_as_yaml_string = model.to_yaml()
+    with open(os.path.join(MODELS_DIR, YAML_FILENAME), 'w') as yaml_file:
+        yaml_file.write(model_as_yaml_string)
+    # Save the weights of the model to an HDF5 file
+    model.save_weights(os.path.join(MODELS_DIR, WEIGHTS_FILENAME))
+
+    # • Pickle *history.history*
+    PICKLES_DIR = 'data/out/pickles'
+    HISTORY_PICKLE_FILENAME = RUN_TIMESTAMP + ' ' + 'history' + '.pickle'
+    # Create the directory if it does not exist.
+    os.makedirs(os.path.dirname(PICKLES_DIR), exist_ok=True)
+    # Pickle
+    with open(os.path.join(PICKLES_DIR, HISTORY_PICKLE_FILENAME), 'wb') as pickle_output_file:
+        pickle.dump(history.history, pickle_output_file)
 
 
 def plot_training_performance(history):
@@ -377,11 +395,7 @@ def main():
                                                                                                        MAX_SEQUENCE_LEN)
     trained_model, history = define_and_train_model(x_train, x_val, y_train, y_val,
                                                     MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
-
-    logger.info('Experiment reproducibility check (SHA1 hash):')
-    logger.info('    trained_model: %s', utils.hex_hash_object(trained_model))
-    logger.info('    history:       %s', utils.hex_hash_object(history))
-
+    serialize_model_and_history(trained_model, history)
     plot_training_performance(history)
     evaluate_model_on_test_set(trained_model, x_test, y_test)
 
