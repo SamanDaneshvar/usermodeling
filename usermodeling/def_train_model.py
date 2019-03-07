@@ -3,7 +3,7 @@
 import logging
 import time
 
-from keras.layers import Embedding, Flatten, Dense, LSTM, GRU
+from keras.layers import Embedding, Flatten, Dense, LSTM, GRU, Bidirectional
 from keras.models import Sequential
 
 
@@ -57,8 +57,8 @@ def basic_fully_connected(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENC
     return model, history
 
 
-def lstm_gru(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
-    """Define and train an LSTM/GRU model"""
+def rnn(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
+    """Define and train an RNN (LSTM/GRU) model"""
 
     EMBEDDING_DIM = 32
 
@@ -78,6 +78,35 @@ def lstm_gru(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_i
                   )
     history = model.fit(x_train, y_train,
                         epochs=20,
+                        batch_size=128,
+                        validation_data=(x_val, y_val),
+                        )
+
+    logger.info('@ %.2f seconds: Finished training and validation', time.process_time())
+
+    return model, history
+
+
+def bidirectional_rnn(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
+    """Define and train a bidirectional RNN (LSTM/GRU) model"""
+
+    EMBEDDING_DIM = 32
+
+    # • Define the model
+    model = Sequential()
+    # Embedding layer
+    model.add(Embedding(MAX_WORDS, EMBEDDING_DIM))
+    model.add(Bidirectional(LSTM(32)))
+    model.add(Dense(1, activation='sigmoid'))
+    model.summary(print_fn=logger.info)
+
+    # Compile and train the model (and evaluate it on the validation set)
+    model.compile(optimizer='rmsprop',
+                  loss='binary_crossentropy',
+                  metrics=['acc'],
+                  )
+    history = model.fit(x_train, y_train,
+                        epochs=10,
                         batch_size=128,
                         validation_data=(x_val, y_val),
                         )
