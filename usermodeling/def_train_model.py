@@ -3,12 +3,12 @@
 import logging
 import time
 
-from keras.layers import Embedding, Flatten, Dense
+from keras.layers import Embedding, Flatten, Dense, LSTM, GRU
 from keras.models import Sequential
 
 
-def basic_word_embeddings(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
-    """Define and train a basic word embeddings model"""
+def basic_fully_connected(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
+    """Define and train a basic fully connected model with word embeddings"""
 
     EMBEDDING_DIM = 100
 
@@ -49,6 +49,36 @@ def basic_word_embeddings(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENC
     history = model.fit(x_train, y_train,
                         epochs=10,
                         batch_size=32,
+                        validation_data=(x_val, y_val),
+                        )
+
+    logger.info('@ %.2f seconds: Finished training and validation', time.process_time())
+
+    return model, history
+
+
+def lstm_gru(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
+    """Define and train an LSTM/GRU model"""
+
+    EMBEDDING_DIM = 32
+
+    # • Define the model
+    model = Sequential()
+    # Embedding layer
+    model.add(Embedding(MAX_WORDS, EMBEDDING_DIM))
+    # model.add(LSTM(32))
+    model.add(GRU(32, dropout=0.2, recurrent_dropout=0.2))  # Add dropout to fight overfitting
+    model.add(Dense(1, activation='sigmoid'))
+    model.summary(print_fn=logger.info)
+
+    # Compile and train the model (and evaluate it on the validation set)
+    model.compile(optimizer='rmsprop',
+                  loss='binary_crossentropy',
+                  metrics=['acc'],
+                  )
+    history = model.fit(x_train, y_train,
+                        epochs=20,
+                        batch_size=128,
                         validation_data=(x_val, y_val),
                         )
 

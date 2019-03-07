@@ -342,10 +342,13 @@ def main():
 
     (x_train, x_val, x_test,
      y_train, y_val, y_test, word_index) = load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN)
-    trained_model, history = def_train_model.basic_word_embeddings(x_train, x_val, y_train, y_val,
-                                                                   MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
+
+    trained_model, history = def_train_model.lstm_gru(
+        x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
+
     serialize_model_and_history(trained_model, history)
     plot_training_performance(history)
+
     evaluate_model_on_test_set(trained_model, x_test, y_test)
 
     # Destroy the current TF graph and create a new one, to ensure reproducible results.
@@ -367,4 +370,3 @@ if __name__ == "__main__":
     logger, RUN_TIMESTAMP = utils.configure_root_logger()
     utils.set_working_directory()
     main()
-    # plot_training_performance_from_pickle('2019-03-06_00-05-50 deep_learning')
