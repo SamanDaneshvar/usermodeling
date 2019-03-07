@@ -1,4 +1,7 @@
-"""Define and train deep learning models"""
+"""Define and train deep learning models
+
+Each function in this module gets the vectorized dataset, defines a deep learning model, and trains it on the dataset.
+"""
 
 import logging
 import time
@@ -106,7 +109,7 @@ def bidirectional_rnn(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LE
                   metrics=['acc'],
                   )
     history = model.fit(x_train, y_train,
-                        epochs=10,
+                        epochs=20,
                         batch_size=128,
                         validation_data=(x_val, y_val),
                         )

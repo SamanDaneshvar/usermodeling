@@ -296,7 +296,7 @@ def main():
     (x_train, x_val, x_test,
      y_train, y_val, y_test, word_index) = load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN)
 
-    trained_model, history = def_train_model.rnn(
+    trained_model, history = def_train_model.bidirectional_rnn(
         x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
 
     serialize_model_and_history(trained_model, history)
