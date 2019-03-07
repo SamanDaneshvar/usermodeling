@@ -118,19 +118,21 @@ def plot_training_performance_from_pickle(run_timestamp):
 
     epochs = range(1, len(acc) + 1)
 
-    plt.figure()  # Create a new figure
+    # Create a figure with two subplots
+    figure, (ax1, ax2) = plt.subplots(2, 1)
 
-    plt.plot(epochs, acc, 'bo', label='Training accuracy')
-    plt.plot(epochs, val_acc, 'b', label='Validation accuracy')
-    plt.title(run_timestamp + '\n' + 'Training and validation accuracy')
-    plt.legend()
+    ax1.plot(epochs, acc, '.:', label='Training accuracy')
+    ax1.plot(epochs, val_acc, 'o-', label='Validation accuracy')
+    ax1.set_ylabel('accuracy')
+    ax1.legend()
 
-    plt.figure()  # Create a new figure
+    ax2.plot(epochs, loss, '.:', label='Training loss')
+    ax2.plot(epochs, val_loss, 'o-', label='Validation loss')
+    ax2.set_ylabel('loss')
+    ax2.set_xlabel('epoch')
+    ax2.legend()
 
-    plt.plot(epochs, loss, 'bo', label='Training loss')
-    plt.plot(epochs, val_loss, 'b', label='Validation loss')
-    plt.title(run_timestamp + '\n' + 'Training and validation loss')
-    plt.legend()
+    figure.suptitle(run_timestamp + '\n' + 'Accuracy and loss for the training and validation')
 
 
 ''' 
@@ -146,5 +148,5 @@ if __name__ == "__main__":
     # legacy_func()
 
     plot_training_performance_from_pickle('2019-03-06_15-42-48 deep_learning __ LSTM')
-    plot_training_performance_from_pickle('2019-03-06_17-50-01 deep_learning __ GRU')
+    # plot_training_performance_from_pickle('2019-03-06_17-50-01 deep_learning __ GRU')
     plt.show()

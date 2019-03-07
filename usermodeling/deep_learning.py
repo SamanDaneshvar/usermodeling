@@ -247,18 +247,21 @@ def plot_training_performance(history):
     logger.info('Training loss: %s', loss)
     logger.info('Validation loss: %s', val_loss)
 
-    plt.plot(epochs, acc, 'bo', label='Training accuracy')
-    plt.plot(epochs, val_acc, 'b', label='Validation accuracy')
-    plt.title('Training and validation accuracy')
-    plt.legend()
+    # Create a figure with two subplots
+    figure, (ax1, ax2) = plt.subplots(2, 1)
 
-    # Create a new figure
-    plt.figure()
+    ax1.plot(epochs, acc, '.:', label='Training accuracy')
+    ax1.plot(epochs, val_acc, 'o-', label='Validation accuracy')
+    ax1.set_ylabel('accuracy')
+    ax1.legend()
 
-    plt.plot(epochs, loss, 'bo', label='Training loss')
-    plt.plot(epochs, val_loss, 'b', label='Validation loss')
-    plt.title('Training and validation loss')
-    plt.legend()
+    ax2.plot(epochs, loss, '.:', label='Training loss')
+    ax2.plot(epochs, val_loss, 'o-', label='Validation loss')
+    ax2.set_ylabel('loss')
+    ax2.set_xlabel('epoch')
+    ax2.legend()
+
+    figure.suptitle('Accuracy and loss for the training and validation')
 
     plt.show()
 
@@ -293,7 +296,7 @@ def main():
     (x_train, x_val, x_test,
      y_train, y_val, y_test, word_index) = load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN)
 
-    trained_model, history = def_train_model.lstm_gru(
+    trained_model, history = def_train_model.rnn(
         x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
 
     serialize_model_and_history(trained_model, history)
