@@ -141,7 +141,7 @@ and not if it is imported as a module.
 the main scope (the scope in which top-level code executes).  
 '''
 if __name__ == "__main__":
-    logger, RUN_TIMESTAMP = utils.configure_root_logger()
+    logger = utils.configure_basic_logger()
     utils.set_working_directory()
     # legacy_func()
 

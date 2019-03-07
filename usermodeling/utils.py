@@ -80,6 +80,31 @@ def configure_root_logger():
     return logger, RUN_TIMESTAMP
 
 
+def configure_basic_logger():
+    """Create a basic logger with a console handler (without any file handlers) and set its configurations.
+
+    Returns:
+        logger: The logger object
+    """
+
+    # Create a RootLogger object
+    logger = logging.getLogger()
+    logger.setLevel(logging.NOTSET)
+
+    # Create a console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+
+    # Create a formatter and set it to the handler
+    formatter = logging.Formatter('%(name)-32s: %(levelname)-8s %(message)s')
+    console_handler.setFormatter(formatter)
+
+    # Add the handler to the logger
+    logger.addHandler(console_handler)
+
+    return logger
+
+
 def set_working_directory():
     """Log system info and set the current working directory
 
