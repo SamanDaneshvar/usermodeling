@@ -9,7 +9,7 @@ from pandas import DataFrame
 from scipy.stats import normaltest
 from scipy.stats import ttest_ind
 
-from usermodeling import utils
+from usermodeling.utils import my_utils
 
 # Change the level of the loggers of some of the imported modules
 logging.getLogger("matplotlib").setLevel(logging.INFO)
@@ -143,8 +143,8 @@ and not if it is imported as a module.
 the main scope (the scope in which top-level code executes).  
 '''
 if __name__ == "__main__":
-    logger = utils.configure_basic_logger()
-    utils.set_working_directory()
+    logger = my_utils.configure_basic_logger()
+    my_utils.set_working_directory()
     # legacy_func()
 
     plot_training_performance_from_pickle('2019-03-06_15-42-48 deep_learning __ LSTM')

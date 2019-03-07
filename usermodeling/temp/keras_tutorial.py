@@ -18,7 +18,7 @@ from keras.preprocessing.text import Tokenizer
 from matplotlib import pyplot as plt
 import numpy as np
 
-from usermodeling import utils
+from usermodeling.utils import my_utils
 
 # Change the level of the loggers of some of the imported modules
 logging.getLogger("matplotlib").setLevel(logging.INFO)
@@ -310,8 +310,8 @@ and not if it is imported as a module.
 the main scope (the scope in which top-level code executes).  
 '''
 if __name__ == '__main__':
-    logger, RUN_TIMESTAMP = utils.configure_root_logger()
-    utils.set_working_directory()
+    logger, RUN_TIMESTAMP = my_utils.configure_root_logger()
+    my_utils.set_working_directory()
     # tutorial_onehot_encoding()
     # tutorial_word_embeddings()
     tutorial_pretrained_word_embeddings()

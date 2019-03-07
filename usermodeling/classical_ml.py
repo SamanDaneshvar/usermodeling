@@ -23,15 +23,15 @@ from nltk.tokenize.casual import TweetTokenizer
 from nltk.tokenize.treebank import TreebankWordDetokenizer
 from sklearn import metrics
 from sklearn.decomposition import TruncatedSVD
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer, TfidfTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer, TfidfTransformer
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.svm import LinearSVC
 
-from usermodeling import process_data_files
-from usermodeling import utils
+from usermodeling.datasets import process_data_files
+from usermodeling.utils import my_utils
 
 # Change the level of the loggers of some of the imported modules
 logging.getLogger("matplotlib").setLevel(logging.INFO)
@@ -852,7 +852,7 @@ and not if it is imported as a module.
 the main scope (the scope in which top-level code executes).  
 '''
 if __name__ == "__main__":
-    logger, RUN_TIMESTAMP = utils.configure_root_logger()
-    utils.set_working_directory()
+    logger, RUN_TIMESTAMP = my_utils.configure_root_logger()
+    my_utils.set_working_directory()
     main_development()
     # main_tira_evaluation()
