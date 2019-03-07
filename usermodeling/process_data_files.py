@@ -155,7 +155,7 @@ def load_pan_data(xmls_directory, truth_path, write_to_txt_files=False, txts_des
         # ↳ " <EndOfTweet> ".join adds the tag between every two strings, so we need to add another tag to the end.
         merged_tweets_of_authors.append(merged_tweets_of_this_author)
 
-    logger.info("@ %.2f seconds: Finished loading the dataset", time.process_time())
+    logger.info("@ %.2f seconds: Finished loading the PAN 2018 Author Profiling dataset", time.process_time())
 
     return merged_tweets_of_authors, truths, author_ids, original_tweet_lengths
 
