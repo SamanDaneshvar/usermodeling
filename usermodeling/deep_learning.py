@@ -263,56 +263,6 @@ def plot_training_performance(history):
     plt.show()
 
 
-def plot_training_performance_from_pickle(run_timestamp):
-    """Load a pickled *history.history* dictionary and plot its information
-
-    This function gets a timestamp string as input and loads its corresponding pickled *history.history* dictionary.
-    The history object is returned by the *model.fit* method in Keras. The *history.history* dictionary is an attribute
-    of history which contains the performance of a model over time during training and validation.
-    The function will plot this information.
-
-    This is useful to review and compare the performance of the models in previous experiments.
-
-    Args:
-        run_timestamp: A string containing the date and time of the target run with the format '%Y-%m-%d_%H-%M-%S'.
-        This string can also contain other characters after the timestamp. As long as the string begins with a
-        timestamp in the above format, and there is some whitespace characters between the timestamp and the rest of
-        the string, the rest of the string will be trimmed and ignored.
-    """
-
-    # In case the input character contains other characters after the timestring, trim the rest of it
-    run_timestamp = run_timestamp.split()[0]
-
-    PICKLES_DIR = 'data/out/pickles'
-    HISTORY_PICKLE_FILENAME = run_timestamp + ' ' + 'history' + '.pickle'
-
-    # Unpickle the *history.history* dictionary
-    with open(os.path.join(PICKLES_DIR, HISTORY_PICKLE_FILENAME), 'rb') as pickle_input_file:
-        history_dot_history = pickle.load(pickle_input_file)
-
-    acc = history_dot_history['acc']
-    val_acc = history_dot_history['val_acc']
-    loss = history_dot_history['loss']
-    val_loss = history_dot_history['val_loss']
-
-    epochs = range(1, len(acc) + 1)
-
-    plt.plot(epochs, acc, 'bo', label='Training accuracy')
-    plt.plot(epochs, val_acc, 'b', label='Validation accuracy')
-    plt.title(run_timestamp + ' ' + 'Training and validation accuracy')
-    plt.legend()
-
-    # Create a new figure
-    plt.figure()
-
-    plt.plot(epochs, loss, 'bo', label='Training loss')
-    plt.plot(epochs, val_loss, 'b', label='Validation loss')
-    plt.title(run_timestamp + ' ' + 'Training and validation loss')
-    plt.legend()
-
-    plt.show()
-
-
 def evaluate_model_on_test_set(model, x_test, y_test):
     """Evaluate the model (already trained) on the test set"""
 
