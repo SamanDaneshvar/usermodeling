@@ -1,4 +1,4 @@
-"""Deal with files: Load datasets from files and write output files.
+"""Load datasets from files and write related output files.
 
 This module loads the dataset of the Author Profiling task at PAN 2018 and pre-processes it.
 For more information refer to the docstring of the *load_pan_data* function.
@@ -8,7 +8,6 @@ Remarks:
 are from a trusted source.
 """
 
-import csv
 import fnmatch
 import logging
 import os
@@ -360,32 +359,6 @@ def write_predictions_to_xmls(author_ids_test, y_predicted, xmls_destination_mai
         # ↳ The final file would look like this:
         # <author gender_comb="N/A" gender_img="N/A" gender_txt="female|male" id="author-id" lang="en|es" />
     logger.info("@ %.2f seconds: Finished writing the predictions to XML files", time.process_time())
-
-
-def write_feature_importance_rankings_to_csv(sorted_feature_weights, sorted_feature_names, log_file_path):
-    """Write the feature importance rankings to a CSV file.
-
-    This function writes the feature importance rankings to a CSV file, next to the log file.
-    Refer to the docstring of the *write_iterable_to_csv()* function.
-    """
-
-    # Determine the path of the output CSV file based on the path of the log file, such that the leading date and
-    # time of the two filenames are the same.
-    log_file_directory = os.path.dirname(log_file_path)
-    log_file_name_without_extension = os.path.splitext(os.path.basename(log_file_path))[0]
-    CSV_PATH = os.path.join(log_file_directory, log_file_name_without_extension + "; Feature importance rankings.csv")
-
-    # Create the directory if it does not exist.
-    os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
-
-    # Write to the CSV file
-    with open(CSV_PATH, 'w', newline='', encoding="utf-8") as csv_output_file:
-        csv_writer = csv.writer(csv_output_file)
-        csv_writer.writerow(["Feature weights:", "Feature names:"])
-        csv_writer.writerows(zip(sorted_feature_weights, sorted_feature_names))
-
-    logger.info('List of features based on their importance in the classification model (absolute feature weight) '
-                'was written to CSV file: "%s"', CSV_PATH)
 
 
 def load_glove_embeddings(glove_path):

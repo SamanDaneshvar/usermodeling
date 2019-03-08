@@ -31,6 +31,7 @@ from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.svm import LinearSVC
 
 from usermodeling.datasets import process_data_files
+from usermodeling.utils import io_utils
 from usermodeling.utils import my_utils
 
 # Change the level of the loggers of some of the imported modules
@@ -734,8 +735,8 @@ def rank_importance_of_features(clf, feature_names, write_to_file):
 
     # Write the rankings to a CSV file
     if write_to_file:
-        process_data_files.write_feature_importance_rankings_to_csv(sorted_feature_weights, sorted_feature_names,
-                                                                    log_file_path=logger.handlers[1].baseFilename)
+        io_utils.write_feature_importance_rankings_to_csv(sorted_feature_weights, sorted_feature_names,
+                                                          log_file_path=logger.handlers[1].baseFilename)
 
     # Define constant: Number of top ranking features to plot
     PLOT_TOP = 30

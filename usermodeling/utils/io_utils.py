@@ -61,6 +61,32 @@ def write_iterable_to_csv(iterable, iterable_name, log_file_path):
     logger.info('%s was written to CSV file: "%s"', iterable_name, CSV_PATH)
 
 
+def write_feature_importance_rankings_to_csv(sorted_feature_weights, sorted_feature_names, log_file_path):
+    """Write the feature importance rankings to a CSV file.
+
+    This function writes the feature importance rankings to a CSV file, next to the log file.
+    Refer to the docstring of the *write_iterable_to_csv()* function.
+    """
+
+    # Determine the path of the output CSV file based on the path of the log file, such that the leading date and
+    # time of the two filenames are the same.
+    log_file_directory = os.path.dirname(log_file_path)
+    log_file_name_without_extension = os.path.splitext(os.path.basename(log_file_path))[0]
+    CSV_PATH = os.path.join(log_file_directory, log_file_name_without_extension + "; Feature importance rankings.csv")
+
+    # Create the directory if it does not exist.
+    os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
+
+    # Write to the CSV file
+    with open(CSV_PATH, 'w', newline='', encoding="utf-8") as csv_output_file:
+        csv_writer = csv.writer(csv_output_file)
+        csv_writer.writerow(["Feature weights:", "Feature names:"])
+        csv_writer.writerows(zip(sorted_feature_weights, sorted_feature_names))
+
+    logger.info('List of features based on their importance in the classification model (absolute feature weight) '
+                'was written to CSV file: "%s"', CSV_PATH)
+
+
 '''
 The following lines will be executed any time this .py file is run as a script or imported as a module.
 '''

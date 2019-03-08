@@ -18,8 +18,8 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
 from usermodeling.classical_ml import preprocess_tweet
-from usermodeling import def_train_model
 from usermodeling.datasets import process_data_files
+from usermodeling import def_train_model
 from usermodeling.utils import my_utils
 
 # Change the level of the loggers of some of the imported modules
