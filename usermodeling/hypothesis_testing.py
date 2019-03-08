@@ -144,7 +144,7 @@ the main scope (the scope in which top-level code executes).
 '''
 if __name__ == "__main__":
     logger = my_utils.configure_basic_logger()
-    my_utils.set_working_directory()
+    my_utils.set_working_directory(1)
     # legacy_func()
 
     plot_training_performance_from_pickle('2019-03-06_15-42-48 deep_learning __ LSTM')

@@ -8,8 +8,12 @@ import pickle
 import sys
 
 
-def configure_root_logger():
+def configure_root_logger(proj_dir=1):
     """Create a logger and set its configurations.
+
+    Args:
+        proj_dir: An integer or a string, indicating the project directory.
+            Similar to the *set_working_directory()* function. Refer to that function's docstrings for more details.
 
     Returns:
         logger: The logger object
@@ -31,28 +35,22 @@ def configure_root_logger():
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.DEBUG)
 
-    # • Get the script path, script (module) name, etc., and deduce the project directory.
-    # We want to make sure the *logs* folder is created inside the project directory, regardless
-    # of the current working directory
-    #
+    # • Get the script path and script (module) name.
     SCRIPT_PATH = os.path.realpath(sys.argv[0])
     # ↳ *sys.argv[0]* contains the script name (it is operating system dependent whether this is a full pathname or not)
     # ↳ *realpath* eliminates symbolic links and returns the canonical path.
-    #
     SCRIPT_FILENAME = os.path.basename(SCRIPT_PATH)
-    #
     # Trim the '.py' extension to get the name of the script (module). If the script filename does not have a '.py'
     # extention, don't trim anything.
     if SCRIPT_FILENAME[-3:] == '.py':
         SCRIPT_NAME = SCRIPT_FILENAME[:-3]
     else:
         SCRIPT_NAME = SCRIPT_FILENAME
-    #
-    # Package directory = the directory that the script/module file resides in
-    # Project directory = one level higher than the package directory
-    # *os.path.dirname* goes one level up in the directory
-    PACKAGE_DIRECTORY = os.path.dirname(SCRIPT_PATH)
-    PROJECT_DIRECTORY = os.path.dirname(PACKAGE_DIRECTORY)
+
+    # Deduce the project directory.
+    # We want to make sure the *logs* folder is created inside the project directory, regardless of
+    # the current working directory.
+    PROJECT_DIRECTORY = deduce_project_directory(proj_dir, SCRIPT_PATH)
 
     # Assemble the logs directory
     LOGS_DIRECTORY = os.path.join(PROJECT_DIRECTORY, 'logs')
@@ -105,15 +103,24 @@ def configure_basic_logger():
     return logger
 
 
-def set_working_directory():
+def set_working_directory(proj_dir=1):
     """Log system info and set the current working directory
 
     This function logs current date and time, computer and user name, and script path.
-    It also sets the current working directory = the project directory.
+    It also sets the working directory. The goal is to set the project directory as the working directory.
+
+    Args:
+        proj_dir: An integer or a string, indicating the project directory (new working directory).
+            - When str: Contains the absolute path of the project directory (new working directory).
+            - When int: Indicates that the project directory (new working directory) is this many levels higher than
+                the script directory (the directory where the script that is running in the main scope resides).
+
+    Raises:
+        TypeError: If the input is not of type int or str.
     """
 
     # Log current date and time, computer and user name
-    logger.info('Current date and time: %s', datetime.today())
+    logger.info('Current date and time:  %s', datetime.today())
     logger.info('Computer and user name: %s, %s', os.getenv('COMPUTERNAME'), os.getlogin())
     # ↳ For a full list of environment variables and their values, call *os.environ*
 
@@ -124,24 +131,47 @@ def set_working_directory():
     # ↳ *realpath* eliminates symbolic links and returns the canonical path.
 
     # Log the script path
-    logger.info('Main scope script path: %s', script_path)
+    logger.info('Main scope script path:          %s', script_path)
 
-    # • Set the current working directory = project directory
-    # Package directory = the directory that the script file resides in
-    # *os.path.dirname* goes one level up in the directory
-    package_directory = os.path.dirname(script_path)
-    #
-    project_directory = os.path.dirname(package_directory)
-    #
+    # Deduce the absolute project directory.
+    project_directory = deduce_project_directory(proj_dir, script_path)
+
+    # Set the current working directory = project directory
     if os.getcwd() == project_directory:
-        logger.info('Current working directory = Project directory'
-                    '\n')
+        logger.info('Current working directory = Project directory')
     else:
         logger.info('Changing working directory from: %s', os.getcwd())
         # Change the working directory to the project directory
         os.chdir(project_directory)
-        logger.info('Current working directory: %s'
-                    '\n', os.getcwd())
+
+    logger.info('Current working directory:       %s'
+                '\n', os.getcwd())
+
+
+def deduce_project_directory(proj_dir, script_path):
+    """Deduce the absolute project directory
+
+    This is a helper function for *set_working_directory()*. Refer to that function's docstrings for more details.
+    """
+
+    # If *proj_dir* is a string, it is expected to already contain the absolute project directory.
+    # If *proj_dir* is of type *int*, go this many levels higher from the script directory to deduce the
+    # absolute project directory (*project_directory*).
+    if isinstance(proj_dir, str):
+        project_directory = proj_dir
+    elif isinstance(proj_dir, int):
+        # Start with the script directory
+        # *os.path.dirname* goes one level up in the directory
+        directory = os.path.dirname(script_path)
+        # Go *proj_dir* levels up
+        for i in range(proj_dir):
+            directory = os.path.dirname(directory)
+        project_directory = directory
+        # *project_directory* now contains the absolute project directory.
+    else:
+        raise (TypeError('The input is expected to be of type int or str, not %s' % type(proj_dir)))
+
+    return project_directory
 
 
 def hex_hash_object(input_object):

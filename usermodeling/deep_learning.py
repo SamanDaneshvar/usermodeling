@@ -320,6 +320,6 @@ and not if it is imported as a module.
 the main scope (the scope in which top-level code executes).  
 '''
 if __name__ == "__main__":
-    logger, RUN_TIMESTAMP = my_utils.configure_root_logger()
-    my_utils.set_working_directory()
+    logger, RUN_TIMESTAMP = my_utils.configure_root_logger(1)
+    my_utils.set_working_directory(1)
     main()
