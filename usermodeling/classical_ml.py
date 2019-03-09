@@ -172,7 +172,7 @@ def preprocess_tweet(tweet):
     # Iterate over tokens
     for index, token in enumerate(tokens):
         # Replace URLs
-        if token[0:8] == "https://":
+        if token[0:8] == "https://" or token[0:7] == "http://":
             replaced_urls.append(token)
             tokens[index] = "<URLURL>"
             # ↳ *tokens[index]* will directly modify *tokens*, whereas any changes to *token* will be lost.
