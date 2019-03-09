@@ -309,7 +309,7 @@ def main():
     K.clear_session()
 
     # Log run time
-    logger.info("@ %.2f seconds: Run finished\n", time.process_time())
+    logger.info("@ %.2f seconds: Run finished", time.process_time())
 
 
 ''' 
