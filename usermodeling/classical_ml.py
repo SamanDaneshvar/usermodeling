@@ -143,7 +143,7 @@ def load_datasets_tira_evaluation(test_dataset_main_directory, preset_key):
     return docs_train, docs_test, y_train, author_ids_test
 
 
-def preprocess_tweet(tweet):
+def preprocess_tweet(tweet, output_mode='single'):
     """Pre-process a tweet.
 
     The following pre-processing operations are done on the tweet:
@@ -154,12 +154,18 @@ def preprocess_tweet(tweet):
         @Username   <UsernameMention>
 
     Args:
-        tweet: String
+        tweet: String to be processed
+        output_mode: If 'single' (default), the function only returns the pre-processed tweet.
+            If 'multiple', the function will also return the other outputs (refer to the Returns section).
     Returns:
-        The pre-processed tweet as String
+        processed_tweet: The pre-processed tweet as String
+        num_tokens: Total number of tokens identified by the tokenizer
+        num_words: Number of tokens that are not a URL and not a @username mention
+        replaced_urls: List of replaced URLs in the tweet
+        replaced_mentions: List of replaced @username mentions in the tweet.
 
     IMPROVEMENTS TO MAKE:
-    - Instead of tokenizing and detokenizing, which is messy, the strings should be directly replaced using regex.
+    - Instead of tokenizing and detokenizing, which is messy, the strings could be directly replaced using regex.
     """
 
     replaced_urls = []  # Create an empty list
@@ -183,12 +189,19 @@ def preprocess_tweet(tweet):
             replaced_mentions.append(token)
             tokens[index] = "<UsernameMention>"
 
+    # Total number of tokens identified by the tokenizer
+    num_tokens = len(tokens)
+    # Number of tokens that are not a URL and not a @username mention
+    num_words = len(tokens) - len(replaced_urls) - len(replaced_mentions)
+
     # Detokenize using NLTK's Treebank Word Detokenizer
     detokenizer = TreebankWordDetokenizer()
     processed_tweet = detokenizer.detokenize(tokens)
 
-    # *replaced_urls* and *replaced_mentions* will contain all of the replaced URLs and Mentions of the input string.
-    return processed_tweet
+    if output_mode == 'single':
+        return processed_tweet
+    elif output_mode == 'multiple':
+        return processed_tweet, num_tokens, num_words, replaced_urls, replaced_mentions
 
 
 def extract_features(docs_train, docs_test, preset_key):
