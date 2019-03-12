@@ -44,6 +44,8 @@ class Dataset:
                             # Create a *Tweet* object
                             # The initializer of the Tweet class will also call the *add_tweet* method for the user
                             Tweet(this_user, row[0], row[1], row[2], row[3])
+                    # Now that all tweets of this user have been added to it, sort the tweets by date and time
+                    this_user.sort_tweets_by_datetime()
 
                     # Log the progress
                     if len(self.users) % 1000 == 0:
@@ -72,8 +74,10 @@ class Dataset:
 
         logger.info('@ %.2f seconds: Finished preprocessing the tweets', time.process_time())
 
-    def drop_retweets(self, drop=True):
-        """Remove all the tweets that are retweets from the dataset
+    def drop_all_retweets(self, drop=True):
+        """Remove any tweets of the dataset that are retweets.
+
+        Calls the *User.drop_retweets()* method for all the users in the dataset.
 
         Args:
             drop: Boolean. When False, the method doubles as a counter without removing any of the retweets.
@@ -85,15 +89,30 @@ class Dataset:
         retweet_counts = []
 
         for user in self.users:
-            retweet_count = 0
-            for tweet in user.get_tweets():
-                if tweet.is_retweet():
-                    retweet_count += 1
-                    if drop:
-                        user.remove_tweet(tweet)
+            retweet_count = user.drop_retweets(drop=drop)
             retweet_counts.append(retweet_count)
 
         return np.array(retweet_counts)
+
+    def drop_all_short_tweets(self, min_word_count, drop=True):
+        """Remove any tweets of the dataset with fewer words than the given threshold
+
+        Calls the *User.drop_short_tweets()* method for all the users in the dataset.
+
+        Args:
+            min_word_count (int): The minimum acceptable word count. Any tweet with fewer words will be removed.
+            drop (boolean): When False, the method doubles as a counter without removing any of the short tweets.
+
+        Returns:
+            A NumPy array containing the count of dropped tweets for each user in the dataset.
+        """
+
+        dropped_tweets_counts = []
+
+        for user in self.users:
+            dropped_tweets_counts.append(user.drop_short_tweets(drop=drop))
+
+        return np.array(dropped_tweets_counts)
 
     def get_user(self, user_id):
         """Find a user based on user ID
@@ -123,11 +142,42 @@ class Dataset:
 
         return np.array(report)
 
-    def get_stats(self):
-        """Produce statistics of the dataset"""
+    def produce_stats(self):
+        """Produce statistics of the dataset and write it to a CSV file."""
+
+        CSV_FILENAME = RUN_TIMESTAMP + ' ' + 'ASI dataset stats.csv'
+        CSV_PATH = os.path.join('data/out', CSV_FILENAME)
+
+        # Header of the CSV file and rows to write
+        header = ['user_id', 'num_tweets', 'less_than_3_words', 'num_foreign_tweets',
+                  'total_num_words', 'newest_datetime', 'oldest_datetime']
+        rows = []
 
         # TODO
-        # for user in self.users:
+        for user in self.users:
+            user_id = user.get_id
+            num_tweets = user.get_num_tweets()
+            total_num_words = np.sum(user.get_word_counts())  # total number of words in all tweets of the user
+            datetimes = user.get_datetimes()
+            newest_datetime = max(datetimes)
+            oldest_datetime = min(datetimes)
+            less_than_3_words = user.drop_short_tweets(min_word_count=3, drop=False)
+            num_foreign_tweets = user.drop_foreign_tweets(drop=False)
+
+            row = [user_id, num_tweets, less_than_3_words, num_foreign_tweets,
+                   total_num_words, newest_datetime, oldest_datetime]
+            rows.append(row)
+
+        # Create the directory if it does not exist.
+        os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
+
+        # Write to the CSV file
+        with open(CSV_PATH, 'w', newline='', encoding='utf-8') as csv_output_file:
+            csv_writer = csv.writer(csv_output_file)
+            csv_writer.writerow(header)
+            csv_writer.writerows(rows)
+
+        logger.info('@ %.2f seconds: Finished writing the dataset stats to CSV file: %s', time.process_time(), CSV_PATH)
 
 
 class User:
@@ -137,8 +187,8 @@ class User:
         self.__id = user_id  # Private data field
         self.__tweets = []
 
-        self.gender = ''
-        self.age = ''
+        self.gender = None
+        self.age = None
 
     def add_tweet(self, tweet):  # Instance method
         """Add a tweet object to the user"""
@@ -149,6 +199,75 @@ class User:
 
         self.__tweets.remove(tweet)
         # ↳ *array.remove(x)* removes the first occurrence of x from the array.
+
+    def sort_tweets_by_datetime(self):
+        """Sort the list of tweets of the user by date and time, in ascending order.
+
+        Run this function once for each user object, after you loaded all tweets of the user.
+        """
+
+        self.__tweets.sort(key=lambda x: x.datetime)
+
+    def drop_retweets(self, drop=True):
+        """Remove any tweets of the user that are retweets.
+
+        Args:
+            drop (boolean): When False, the method doubles as a counter without removing any of the retweets.
+
+        Returns:
+            The number of retweets of the user
+        """
+
+        retweet_count = 0
+        for tweet in self.__tweets:
+            if tweet.is_retweet():
+                retweet_count += 1
+                if drop:
+                    self.remove_tweet(tweet)
+
+        return retweet_count
+
+    def drop_short_tweets(self, min_word_count, drop=True):
+        """Remove any tweets of the user with fewer words than the given threshold.
+
+        Args:
+            min_word_count (int): The minimum acceptable word count. Any tweet with fewer words will be removed.
+            drop (boolean): When False, the method doubles as a counter without removing any of the short tweets.
+
+        Returns:
+            (int) Number of dropped tweets.
+        """
+
+        dropped_tweets_count = 0
+
+        for tweet in self.__tweets:
+            if tweet.word_count < min_word_count:
+                dropped_tweets_count += 1
+                if drop:
+                    self.remove_tweet(tweet)
+
+        return dropped_tweets_count
+
+    def drop_foreign_tweets(self, acceptable_languages=['en', 'NA', 'und'], drop=True):
+        """Remove any tweets of the user with a language other than the given acceptable list
+
+        Args:
+            acceptable_languages (list of str): List of acceptable languages.
+            drop (boolean): When False, the method doubles as a counter without removing any of the foreign tweets.
+
+        Returns:
+            (int) Number of dropped tweets.
+        """
+
+        dropped_tweets_count = 0
+
+        for tweet in self.__tweets:
+            if tweet.language not in acceptable_languages:
+                dropped_tweets_count += 1
+                if drop:
+                    self.remove_tweet(tweet)
+
+        return dropped_tweets_count
 
     def get_id(self):
         """Getter (accessor) for user ID"""
@@ -162,24 +281,51 @@ class User:
         """Get number of tweets of the user"""
         return len(self.__tweets)
 
+    def get_word_counts(self):
+        """Get the word counts of the tweets of the user
+
+        Returns:
+             A NumPy array containing the word count for each tweet of the user
+        """
+
+        word_counts = []
+        for tweet in self.__tweets:
+            word_counts.append(tweet.word_count)
+
+        return np.array(word_counts)
+
+    def get_datetimes(self):
+        """Get the date and time of the tweets of the user
+
+        Returns:
+            A list containing a *datetime* object for each tweet of the user
+        """
+
+        datetimes = []
+        for tweet in self.__tweets:
+            datetimes.append(tweet.datetime)
+
+        return datetimes
+
 
 class Tweet:
     """Tweet class"""
 
     def __init__(self, user, datetime_string, language, original_text, url):
-        self.__user = user
-        user.add_tweet(self)
-
         # Remove the colon from the UTC offset (last six characters): '+00:00'
         datetime_string = datetime_string[:-5] + datetime_string[-5:-3] + datetime_string[-2:]
         # Parse the string into a *datetime* object
         self.datetime = datetime.strptime(datetime_string, '%Y-%m-%dT%H:%M:%S%z')
 
+        self.__user = user
+        user.add_tweet(self)
+
         self.language = language
         self.original_text = original_text
-        self.text = ''
+        self.text = None  # Will be assigned by the *preprocess()* instance method
         self.url = url
-        self.__retweet = ''
+        self.__retweet = None  # Will be assigned by the *preprocess()* instance method
+        self.word_count = None  # Will be assigned by the *preprocess()* instance method
 
     def get_user(self):
         """Getter (accessor) for the user attribute"""
@@ -202,7 +348,8 @@ class Tweet:
         else:
             self.__retweet = False
             # Preprocess the tweet
-            self.text = preprocess_tweet(self.original_text)
+            self.text, ignored1, self.word_count, ignored2, ignored3 = preprocess_tweet(self.original_text,
+                                                                                        output_mode='multiple')
 
 
 def main():
@@ -216,15 +363,14 @@ def main():
 
     tweet_counts_before = dataset.get_num_tweets()
 
-    retweet_counts = dataset.drop_retweets()
+    retweet_counts = dataset.drop_all_retweets()
     logger.info('@ %.2f seconds: Finished removing the retweets', time.process_time())
-    logger.info('A total of %s retweets dropped.', format(sum(retweet_counts), ',d'))
+    logger.info('A total of %s retweets were dropped.', format(sum(retweet_counts), ',d'))
 
     tweet_counts_after = dataset.get_num_tweets()
 
     if np.array_equal(tweet_counts_before - retweet_counts, tweet_counts_after):
-        logger.info('Success: The counts of tweets and retweets before and after drop checks out!')
-
+        logger.info('(TEMP) Success: The counts of tweets and retweets before and after drop checks out!')
 
     # dataset.get_stats()
 
