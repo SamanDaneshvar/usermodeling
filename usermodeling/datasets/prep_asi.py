@@ -25,6 +25,8 @@ class Dataset:
             CSVS_ROOT_DIR: The root directory containing CSV files of users (all tweets of user)
         """
 
+        logger.info('Loading the ASI dataset from: %s', CSVS_ROOT_DIR)
+
         # Go through every file in the directory and its subdirectories,
         # and load the tweets into Tweet objects.
         for root, dirs, files in os.walk(CSVS_ROOT_DIR):
@@ -155,12 +157,19 @@ class Dataset:
 
         # TODO
         for user in self.users:
-            user_id = user.get_id
+            user_id = user.get_id()
             num_tweets = user.get_num_tweets()
             total_num_words = np.sum(user.get_word_counts())  # total number of words in all tweets of the user
             datetimes = user.get_datetimes()
-            newest_datetime = max(datetimes)
-            oldest_datetime = min(datetimes)
+            if len(datetimes) != 0:
+                # If the list is not empty
+                newest_datetime = max(datetimes)
+                oldest_datetime = min(datetimes)
+            else:
+                # If the list is empty (when the user has no tweets)
+                newest_datetime = 'NA'
+                oldest_datetime = 'NA'
+
             less_than_3_words = user.drop_short_tweets(min_word_count=3, drop=False)
             num_foreign_tweets = user.drop_foreign_tweets(drop=False)
 
@@ -218,12 +227,21 @@ class User:
             The number of retweets of the user
         """
 
-        retweet_count = 0
+        tweets_to_remove = []
+
         for tweet in self.__tweets:
             if tweet.is_retweet():
-                retweet_count += 1
-                if drop:
-                    self.remove_tweet(tweet)
+                # Removing the item from the list would shift all the subsequent items up, causing the loop to miss
+                # the item directly after the removed item. To overcome this issue, we make a list of the items to
+                # remove, and remove them altogether after this loop.
+                tweets_to_remove.append(tweet)
+
+        retweet_count = len(tweets_to_remove)
+
+        # Remove the tweets from the user
+        if drop:
+            for tweet in tweets_to_remove:
+                self.remove_tweet(tweet)
 
         return retweet_count
 
@@ -238,15 +256,18 @@ class User:
             (int) Number of dropped tweets.
         """
 
-        dropped_tweets_count = 0
+        tweets_to_remove = []
 
         for tweet in self.__tweets:
             if tweet.word_count < min_word_count:
-                dropped_tweets_count += 1
-                if drop:
-                    self.remove_tweet(tweet)
+                # Refer to the *User.drop_retweets()* method (same idea).
+                tweets_to_remove.append(tweet)
 
-        return dropped_tweets_count
+        if drop:
+            for tweet in tweets_to_remove:
+                self.remove_tweet(tweet)
+
+        return len(tweets_to_remove)
 
     def drop_foreign_tweets(self, acceptable_languages=['en', 'NA', 'und'], drop=True):
         """Remove any tweets of the user with a language other than the given acceptable list
@@ -259,15 +280,18 @@ class User:
             (int) Number of dropped tweets.
         """
 
-        dropped_tweets_count = 0
+        tweets_to_remove = []
 
         for tweet in self.__tweets:
             if tweet.language not in acceptable_languages:
-                dropped_tweets_count += 1
-                if drop:
-                    self.remove_tweet(tweet)
+                # Refer to the *User.drop_retweets()* method (same idea).
+                tweets_to_remove.append(tweet)
 
-        return dropped_tweets_count
+        if drop:
+            for tweet in tweets_to_remove:
+                self.remove_tweet(tweet)
+
+        return len(tweets_to_remove)
 
     def get_id(self):
         """Getter (accessor) for user ID"""
@@ -356,6 +380,7 @@ def main():
     """The main function"""
 
     CSV_BATCHES_DIR = 'P:/2018-12-20_13-31-03 _ Batch 1'
+    # CSV_BATCHES_DIR = 'P:/2018-12-20_13-47-34 _ Batch 2'
 
     dataset = Dataset()  # Constructor
     dataset.load_tweets(CSV_BATCHES_DIR)
@@ -372,7 +397,7 @@ def main():
     if np.array_equal(tweet_counts_before - retweet_counts, tweet_counts_after):
         logger.info('(TEMP) Success: The counts of tweets and retweets before and after drop checks out!')
 
-    # dataset.get_stats()
+    dataset.produce_stats()
 
     # Log run time
     logger.info("@ %.2f seconds: Run finished", time.process_time())
