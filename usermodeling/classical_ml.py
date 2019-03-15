@@ -862,10 +862,10 @@ def main_tira_evaluation():
 The following lines will be executed only if this .py file is run as a script,
 and not if it is imported as a module.
 • __name__ is one of the import-related module attributes, which holds the name of the module.
-• A module's __name__ is set to "__main__" when it is running in
+• A module's __name__ is set to '__main__' when it is running in
 the main scope (the scope in which top-level code executes).  
 '''
-if __name__ == "__main__":
+if __name__ == '__main__':
     logger, RUN_TIMESTAMP = my_utils.configure_root_logger(1)
     my_utils.set_working_directory(1)
     main_development()

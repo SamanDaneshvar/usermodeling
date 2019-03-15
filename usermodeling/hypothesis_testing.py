@@ -139,10 +139,10 @@ def plot_training_performance_from_pickle(run_timestamp):
 The following lines will be executed only if this .py file is run as a script,
 and not if it is imported as a module.
 • __name__ is one of the import-related module attributes, which holds the name of the module.
-• A module's __name__ is set to "__main__" when it is running in
+• A module's __name__ is set to '__main__' when it is running in
 the main scope (the scope in which top-level code executes).  
 '''
-if __name__ == "__main__":
+if __name__ == '__main__':
     logger = my_utils.configure_basic_logger()
     my_utils.set_working_directory(1)
     # legacy_func()
