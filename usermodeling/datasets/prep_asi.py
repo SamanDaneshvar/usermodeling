@@ -1,12 +1,27 @@
-"""Prepare the Advanced Symbolics (ASI) dataset"""
+"""Prepare the Advanced Symbolics (ASI) dataset
+
+Remarks:
+- To install polyglot on a Windows machine:
+    1. Download the PyICU, Morfessor, and PyCLD2 wheels from  https://www.lfd.uci.edu/~gohlke/pythonlibs/
+    2. Install the above three libraries by:
+        pip install downloaded_wheel.whl
+    3. Download the GitHub repository of polyglot from: https://github.com/aboSamoor/polyglot
+    4. Extract the zip file and run:
+        python setup.py install
+        (You will need to change the directory of the Command Prompt to the extracted folder)
+    5. Done!
+    Reference: https://stackoverflow.com/a/47106810/9933071
+"""
 
 import csv
 from datetime import datetime
 import fnmatch
 import os
 import pickle
+import sys
 import time
 
+from polyglot.detect import Detector
 import numpy as np
 
 from usermodeling.utils import my_utils
@@ -37,6 +52,7 @@ class Dataset:
                 demographics CSV file, only the rows related to users that are in this list will be loaded.
         """
 
+        logger.info('Loading the list of users for the ASI dataset from: "%s"', USERS_LIST_PATH)
         logger.info('Loading the demographics of the ASI dataset from: "%s"', DEMOGRAPHICS_CSV_PATH)
 
         # Read the target users into a set. A set is more efficient than a list for lookups, etc.
@@ -110,8 +126,8 @@ class Dataset:
 
         logger.info('@ %.2f seconds: Finished loading the labels (demographics): %s users',
                     time.process_time(), format(len(self.users), ',d'))
-        logger.info('%s users were skipped due to unfetched demographics: %s',
-                    format(len(user_ids_with_unfetched_demographics), ',d'), user_ids_with_unfetched_demographics)
+        logger.warning('%s users were skipped due to unfetched demographics: %s',
+                       format(len(user_ids_with_unfetched_demographics), ',d'), user_ids_with_unfetched_demographics)
 
     def load_tweets(self, CSVS_ROOT_DIR):
         """Load all tweets from CSV files onto the User objects.
@@ -126,6 +142,7 @@ class Dataset:
         logger.info('Loading the tweets of the ASI dataset from: "%s"', CSVS_ROOT_DIR)
 
         num_processed_users = 0  # Initialize the counter
+        non_existent_user_ids = []  # Create an empty list
 
         # Go through every file in the directory and its subdirectories,
         # and load the tweets into Tweet objects.
@@ -134,24 +151,34 @@ class Dataset:
                 if fnmatch.fnmatch(filename, '*.csv'):
                     csv_file_path = os.path.join(root, filename)
                     user_id = filename[:-4]
+
                     # Get the existing corresponding user object
                     this_user = self.get_user(user_id)
-                    # If the user ID did not match any of the existing users, warn the user and continue to the next
-                    # user
+
+                    # If the user ID did not match any of the existing users, continue to the next user
                     if this_user is None:
-                        logger.warning('User ID "%s" did not match that of any existing users.'
-                                       'Skipped loading the tweets for this user.', user_id)
+                        non_existent_user_ids.append(user_id)
                         continue
+
                     # Counter++
                     num_processed_users += 1
-                    # Go through the tweets in the CSV file
-                    with open(csv_file_path, 'r', newline='', encoding='utf-8') as csv_file:
-                        csv_reader = csv.reader(csv_file)
-                        next(csv_reader)  # Skip the first row (header)
-                        for row in csv_reader:
-                            # Create a *Tweet* object
-                            # The initializer of the Tweet class will also call the *add_tweet* method for the user
-                            Tweet(this_user, row[0], row[1], row[2], row[3])
+
+                    # Work around the UTF-8 error (in user_id='26526980')
+                    try:
+                        # Go through the tweets in the CSV file
+                        with open(csv_file_path, 'r', newline='', encoding='utf-8') as csv_file:
+                            csv_reader = csv.reader(csv_file)
+                            next(csv_reader)  # Skip the first row (header)
+                            for row in csv_reader:
+                                # Create a *Tweet* object
+                                # The initializer of the Tweet class will also call the *add_tweet* method for the user
+                                Tweet(this_user, row[0], row[1], row[2], row[3])
+                    except Exception as e:
+                        logger.error('Error: %s | User ID: %s', e, this_user.get_id())
+                    except:
+                        logger.error('Unexpected error: %s | User ID: %s', sys.exc_info()[0], this_user.get_id())
+
+
                     # Now that all tweets of this user have been added to it, sort the tweets by date and time
                     this_user.sort_tweets_by_datetime()
 
@@ -161,13 +188,15 @@ class Dataset:
                                     time.process_time(), format(num_processed_users, ',d'))
 
         # Log basic stats
-        num_users = len(self.users)
         num_tweets = 0
         for user in self.users:
             num_tweets += len(user.get_tweets())
 
         logger.info('@ %.2f seconds: Finished loading the dataset: %s users and %s tweets',
-                    time.process_time(), format(num_users, ',d'), format(num_tweets, ',d'))
+                    time.process_time(), format(num_processed_users, ',d'), format(num_tweets, ',d'))
+
+        logger.warning('Skipped loading the tweets of %s users, because their user ID did not match that of '
+                       'any existing users: %s', len(non_existent_user_ids), non_existent_user_ids)
 
     def preprocess_tweets(self):
         """Preprocess the tweets in the dataset"""
@@ -222,8 +251,36 @@ class Dataset:
 
         return np.array(dropped_tweets_counts)
 
+    def detect_language_of_all_na_tweets(self):
+        """Detect the language of any tweet of the user where the *language* attribute is 'NA'"""
+
+        num_success = 0
+        num_failed = 0
+
+        for user in self.users:
+            for tweet in user.get_tweets():
+                if tweet.language == 'NA':
+                    success = tweet.detect_language()
+                    if success:
+                        num_success += 1
+                    else:
+                        num_failed += 1
+
+        logger.info('@ %.2f seconds: Finished detecting the language of all "NA" tweets of the dataset',
+                    time.process_time())
+        logger.info('Successfully detected the language of %s tweets. Failed on %s tweets',
+                    format(num_success, ',d'), format(num_failed, ',d'))
+
     def drop_all_foreign_tweets(self):
-        """TODO"""
+        """Remove non-English tweets from all users in the dataset"""
+
+        dropped_tweets_count = 0
+
+        for user in self.users:
+            dropped_tweets_count += user.drop_foreign_tweets()
+
+        logger.info('@ %.2f seconds: Finished removing the non-english tweets', time.process_time())
+        logger.info('A total of %s non-english tweets were dropped.', format(dropped_tweets_count, ',d'))
 
     def drop_users_with_no_tweets(self):
         """Remove any users of the dataset that have no tweets.
@@ -244,7 +301,54 @@ class Dataset:
             dropped_user_ids.append(user.get_id())
             self.remove_user(user)
 
-        return dropped_user_ids
+        logger.info('Dropped %s users with no tweets: %s', format(len(dropped_user_ids), ',d'), dropped_user_ids)
+
+    def pickle(self):
+        """Pickle the dataset object
+
+        1. Remove the *original_text* attribute from all tweets in the dataset
+        2. Serialize (pickle) the dataset
+        """
+
+        PICKLES_DIR = 'data/out/pickles'
+        DATASET_PICKLE_FILENAME = RUN_TIMESTAMP + ' dataset object.pickle'
+
+        # Remove the *original_text* attribute from all tweets to reduce the size of the dataset by half
+        for user in self.users:
+            for tweet in user.get_tweets():
+                tweet.original_text = ''
+
+        logger.info('@ %.2f seconds: Finished removing the *original_text* attribute from all tweets.',
+                    time.process_time())
+
+        # Create the directory if it does not exist.
+        os.makedirs(os.path.dirname(PICKLES_DIR), exist_ok=True)
+
+        # Pickle
+        with open(os.path.join(PICKLES_DIR, DATASET_PICKLE_FILENAME), 'wb') as pickle_output_file:
+            pickle.dump(self, pickle_output_file)
+
+        logger.info('@ %.2f seconds: Finished pickling the dataset', time.process_time())
+
+    @staticmethod
+    def from_pickle(DATASET_PICKLE_FILENAME):
+        """Load the dataset object from pickle
+
+        In the pickled dataset, the *original_text* attribute of all tweets is blank ('').
+
+        Args:
+            DATASET_PICKLE_FILENAME: A string with the form:   RUN_TIMESTAMP + ' dataset object.pickle'
+        """
+
+        PICKLES_DIR = 'data/out/pickles'
+
+        logger.info('Loading the dataset from pickle: "%s"', DATASET_PICKLE_FILENAME)
+
+        with open(os.path.join(PICKLES_DIR, DATASET_PICKLE_FILENAME), 'rb') as pickle_input_file:
+            unpickled_dataset = pickle.load(pickle_input_file)
+        logger.info('@ %.2f seconds: Finished loading the dataset from pickle', time.process_time())
+
+        return unpickled_dataset
 
     def get_user(self, user_id):
         """Find a user based on user ID
@@ -275,15 +379,15 @@ class Dataset:
 
         return np.array(report)
 
-    def produce_stats(self):
+    def produce_stats(self, file_title='ASI dataset stats'):
         """Produce statistics of the dataset and write it to a CSV file."""
 
-        CSV_FILENAME = RUN_TIMESTAMP + ' ' + 'ASI dataset stats.csv'
+        CSV_FILENAME = RUN_TIMESTAMP + ' ' + file_title + '.csv'
         CSV_PATH = os.path.join('data/out', CSV_FILENAME)
 
         # Header of the CSV file and rows to write
         header = ['user_id', 'gender', 'age', 'num_tweets', 'less_than_3_words',
-                  'lang_other', 'lang_na', 'lang_en', 'lang_und',
+                  'lang_foreign', 'lang_na', 'lang_en', 'lang_und',
                   'total_num_words', 'newest_datetime', 'oldest_datetime']
         rows = []
 
@@ -306,10 +410,10 @@ class Dataset:
             less_than_3_words = user.drop_short_tweets(min_word_count=3, drop=False)
 
             # Get the statistics of language of tweets for the user
-            num_lang_en, num_lang_na, num_lang_und, num_lang_other = user.drop_foreign_tweets(drop=False)
+            num_lang_en, num_lang_na, num_lang_und, num_lang_foreign = user.get_language_stats()
 
             row = [user_id, gender, age, num_tweets, less_than_3_words,
-                   num_lang_other, num_lang_na, num_lang_en, num_lang_und,
+                   num_lang_foreign, num_lang_na, num_lang_en, num_lang_und,
                    total_num_words, newest_datetime, oldest_datetime]
             rows.append(row)
 
@@ -384,6 +488,21 @@ class User:
 
         return retweet_count
 
+    def drop_foreign_tweets(self):
+        """Remove all non-English tweets of the user."""
+
+        tweets_to_remove = []
+
+        for tweet in self.__tweets:
+            if tweet.language != 'en':
+                # Refer to the *User.drop_retweets()* method (same idea).
+                tweets_to_remove.append(tweet)
+
+        for tweet in tweets_to_remove:
+            self.remove_tweet(tweet)
+
+        return len(tweets_to_remove)
+
     def drop_short_tweets(self, min_word_count, drop=True):
         """Remove any tweets of the user with fewer words than the given threshold.
 
@@ -408,35 +527,16 @@ class User:
 
         return len(tweets_to_remove)
 
-    def drop_foreign_tweets(self, drop=True):
-        """Remove non-English tweets of the user.
+    def get_language_stats(self):
+        """Count the language of the tweets of the user
 
         In the ASI dataset, a tweet's language can be:
             - 'en':  English
             - 'und': Undetermined. Usually a tweet with no words (only mentions and URLs and emoticons)
             - 'NA':  These are tweets that for some reason are not updated with the language, so we don't know.
+                The language of these tweets is later determined by *polyglot* and updated (unless *polyglot* is unable
+                to determine the language of the tweet).
             - Other (e.g., 'fr', 'es'): Foreign tweets—tweets in other languages (e.g., French, Spanish)
-
-        We drop all the 'und' tweets and keep all the 'en' tweets.
-        We will also drop all the foreign tweets (tweets with other languages).
-
-        We decide to drop or keep the 'NA' tweets based on the following proportion: en/(en+foreign)
-        Where:
-            en      = number of English tweets
-            foreign = number of foreign tweets—tweets in other languages
-        The 'und' and 'NA' tweets are left out of the above numbers.
-        - If the proportion of English/(English+Foreign) tweets is >= 95%, we keep all the 'NA' tweets as there is a
-        good chance that they are in English. Otherwise, we drop all the 'NA' tweets to prevent introducing noise
-        into the dataset.
-        - TODO: For some users both the above numbers are zero (all tweets of the user are of language 'NA' or 'und').
-        In those cases all of the tweets of the user will be dropped and we will end up losing that user.
-        We will report the ocunt of those users.
-
-        Args:
-            drop (boolean): When False, the method doubles as a counter without removing any of the foreign tweets.
-
-        Returns:
-            (int) Number of dropped tweets.
         """
 
         num_en = 0
@@ -444,38 +544,17 @@ class User:
         num_und = 0
         num_foreign = 0
 
-        tweets_to_remove = []
-
         for tweet in self.__tweets:
             if tweet.language == 'en':
                 num_en += 1
-            elif tweet.language == 'na':
+            elif tweet.language == 'NA':
                 num_na += 1
             elif tweet.language == 'und':
                 num_und += 1
-                # Refer to the *User.drop_retweets()* method (same idea).
-                tweets_to_remove.append(tweet)
             else:
                 num_foreign += 1
-                tweets_to_remove.append(tweet)
 
-        # If *drop* == False, only return the statistics and skip the rest of the method
-        if not drop:
-            return num_en, num_na, num_und, num_foreign
-
-        # • Decide to drop the 'NA' tweets or not
-        if (num_en + num_foreign) == 0:
-            # This would prevent a ZeroDivisionError
-            drop_na_tweets = True
-        else:
-            en_proportion = num_en / (num_en + num_foreign)
-            if en_proportion >= 0.95:
-                drop_na_tweets = False
-            else:
-                drop_na_tweets = True
-
-        # TODO: Return something! + Is this the way to go with NA tweets?
-
+        return num_en, num_na, num_und, num_foreign
 
     def get_id(self):
         """Getter (accessor) for user ID"""
@@ -558,7 +637,33 @@ class Tweet:
             self.__retweet = False
             # Preprocess the tweet
             self.text, ignored1, self.word_count, ignored2, ignored3 = preprocess_tweet(self.original_text,
+                                                                                        replacement_tags=False,
                                                                                         output_mode='multiple')
+
+    def detect_language(self):
+        """Detect the language using polyglot.
+
+        Sets the *language* attribute of the tweet to a language code according to ISO 639-1:
+            https://cloud.google.com/translate/docs/languages#languages-pbmt
+            For example, 'en' for English and 'fr' for French.
+
+        polyglot's documentation: https://polyglot.readthedocs.io/en/latest/Detection.html
+
+        Returns:
+            success: True if detected the language successfully, False if failed.
+        """
+
+        try:
+            detector = Detector(self.text, quiet=True)
+            # ↳ *quite=True* silences the exception:
+            #   logger.warning('Detector is not able to detect the language reliably.')
+            self.language = detector.language.code
+            success = True
+        except Exception as e:
+            # logger.error('Error detecting language of tweet: %s', e)
+            success = False
+
+        return success
 
 
 def decide_gender_age(gender_age):
@@ -625,58 +730,53 @@ def decide_gender_age(gender_age):
 def main():
     """The main function"""
 
-    # Demographics (labels)
+    # Constants
     DEMOGRAPHICS_CSV_PATH = 'data/Advanced Symbolics/2018-10-30 user_info, Canada Ignite 5.csv'
-    # USERS_LIST_PATH = 'data/Advanced Symbolics/List of users _ Batch 1 (934).txt'
-    USERS_LIST_PATH = 'data/Advanced Symbolics/List of users _ Batch 1–7 (30,934).txt'
+    #
+    USERS_LIST_PATH = 'data/Advanced Symbolics/List of users _ Batch 1 (934).txt'
+    # USERS_LIST_PATH = 'data/Advanced Symbolics/List of users _ Batch 1–7 (30,934).txt'
+    #
+    TWEET_CSV_BATCHES_DIR = 'P:/2018-12-20_13-31-03 _ Batch 1'
+    # TWEET_CSV_BATCHES_DIR = 'P:/'
 
-    # Tweets
-    # CSV_BATCHES_DIR = 'P:/2018-12-20_13-31-03 _ Batch 1'
-    CSV_BATCHES_DIR = 'P:/'
-
+    # TODO: If loading from pickle, skip the following lines.
     dataset = Dataset()  # Constructor
     # Load the labels (demographics) and create users
     dataset.load_labels_and_create_users(DEMOGRAPHICS_CSV_PATH, USERS_LIST_PATH)
     # Load the tweets onto the existing users
-    dataset.load_tweets(CSV_BATCHES_DIR)
+    dataset.load_tweets(TWEET_CSV_BATCHES_DIR)
 
+    # Preprocess: Determines the *__retweet*, *text*, and *word_count* attributes of all tweets
     dataset.preprocess_tweets()
 
-    #  • Pickle the dataset object
-    PICKLES_DIR = 'data/out/pickles'
-    DATASET_PICKLE_FILENAME = RUN_TIMESTAMP + ' dataset object.pickle'
-    # Create the directory if it does not exist.
-    os.makedirs(os.path.dirname(PICKLES_DIR), exist_ok=True)
-    # Pickle
-    with open(os.path.join(PICKLES_DIR, DATASET_PICKLE_FILENAME), 'wb') as pickle_output_file:
-        pickle.dump(dataset, pickle_output_file)
-    logger.info('@ %.2f seconds: Finished pickling the dataset', time.process_time())
-
-    # TEMP
-    tweet_counts_before = dataset.get_num_tweets()
+    # # TODO
+    # # Load the dataset from pickle
+    # dataset = Dataset.from_pickle('2019-03-15_18-53-43 dataset object.pickle')
 
     # Drop all the retweets
     retweet_counts = dataset.drop_all_retweets()
     logger.info('@ %.2f seconds: Finished removing the retweets', time.process_time())
     logger.info('A total of %s retweets were dropped.', format(sum(retweet_counts), ',d'))
 
-    # TEMP
-    tweet_counts_after = dataset.get_num_tweets()
-    if np.array_equal(tweet_counts_before - retweet_counts, tweet_counts_after):
-        logger.info('(TEMP) Success: The counts of tweets and retweets before and after drop checks out!')
+    dataset.detect_language_of_all_na_tweets()
 
-    # TODO
-    # dataset.drop_all_foreign_tweets()
+    dataset.produce_stats('ASI dataset stats, 1. after lang detect')  # TEMP
+
+    dataset.drop_all_foreign_tweets()
+
+    dataset.produce_stats('ASI dataset stats, 1. after dropping non-english')  # TEMP
+
     # dataset.drop_all_short_tweets()
 
     # At this point, some users might have no tweets, either because an inconsistency between the list of users (when
     # loading the user demographics) and the existing tweets dataset, or because all of their tweets were retweets
     # or short tweets and were dropped in the previous operations.
     # Let's drop those users
-    dropped_user_ids = dataset.drop_users_with_no_tweets()
-    logger.info('Dropped %s users with no tweets: %s', format(len(dropped_user_ids), ',d'), dropped_user_ids)
+    dataset.drop_users_with_no_tweets()
 
-    dataset.produce_stats()
+
+    # # TODO
+    # dataset.pickle()
 
     # Log run time
     logger.info("@ %.2f seconds: Run finished", time.process_time())

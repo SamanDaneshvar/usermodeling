@@ -143,18 +143,21 @@ def load_datasets_tira_evaluation(test_dataset_main_directory, preset_key):
     return docs_train, docs_test, y_train, author_ids_test
 
 
-def preprocess_tweet(tweet, output_mode='single'):
+def preprocess_tweet(tweet, replacement_tags=True, output_mode='single'):
     """Pre-process a tweet.
 
     The following pre-processing operations are done on the tweet:
     - Replace repeated character sequences of length 3 or greater with sequences of length 3
     - Lowercase
-    - Replace all URLs and username mentions with the following tags:
+    - If *replacement_tags* = True, Replace all URLs and username mentions with the following tags:
         URL		    <URLURL>
         @Username   <UsernameMention>
+      Otherwise, remove all URLs and username mentions without replacing them with a tag.
 
     Args:
         tweet: String to be processed
+        replacement_tags: If True (default), the URLs and username mentions will be replaced with tags. Otherwise,
+            they will be just removed without being replaced by a tag.
         output_mode: If 'single' (default), the function only returns the pre-processed tweet.
             If 'multiple', the function will also return the other outputs (refer to the Returns section).
     Returns:
@@ -171,6 +174,13 @@ def preprocess_tweet(tweet, output_mode='single'):
     replaced_urls = []  # Create an empty list
     replaced_mentions = []  # Create an empty list
 
+    if replacement_tags:
+        URL_TAG = '<URLURL>'
+        MENTION_TAG = '<UsernameMention>'
+    else:
+        URL_TAG = ''
+        MENTION_TAG = ''
+
     # Tokenize using NLTK
     tokenizer = TweetTokenizer(preserve_case=False, reduce_len=True)
     tokens = tokenizer.tokenize(tweet)
@@ -180,14 +190,14 @@ def preprocess_tweet(tweet, output_mode='single'):
         # Replace URLs
         if token[0:8] == "https://" or token[0:7] == "http://":
             replaced_urls.append(token)
-            tokens[index] = "<URLURL>"
+            tokens[index] = URL_TAG
             # ↳ *tokens[index]* will directly modify *tokens*, whereas any changes to *token* will be lost.
 
         # Replace mentions (Twitter handles; usernames)
         elif token[0] == "@" and len(token) > 1:
             # ↳ Skip the single '@' tokens
             replaced_mentions.append(token)
-            tokens[index] = "<UsernameMention>"
+            tokens[index] = MENTION_TAG
 
     # Total number of tokens identified by the tokenizer
     num_tokens = len(tokens)
