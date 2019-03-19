@@ -644,8 +644,19 @@ class User:
 
         return datetimes
 
-    def tweets_to_xml(self):
+    def tweets_to_xml(self, include_original_text=False):
         """Export the tweets of the user to an XML file
+
+        The filename will be the ID of the user. The elements of the XML file will be in the following form:
+            <user>
+                <tweet date_time="2018-01-01 16:00:00+00:00" lang="en" word_count="100">
+                    <text>The processed text.</text>
+                    <original_text>The original text. Could include newline characters.</original_text>
+                </tweet>
+            </user>
+
+        Args:
+            include_original_text: If False (default) the original_text element will be left out of the XML file.
 
         Remarks:
             - A handy command:
@@ -668,12 +679,18 @@ class User:
             original_text = tweet.original_text
 
             # Create a sub-element—appended to the root (the user)—representing the tweet
-            child = ET.SubElement(root, 'tweet', attrib={'word_count': str(word_count),
-                                                                  'lang': lang,
-                                                                  'text': text,
-                                                                  'date_time': str(date_time),
-                                                                  'original_text': original_text,
-                                                                  })
+            # All non-string attributes need to be converted to strings
+            child = ET.SubElement(root, 'tweet', attrib={'date_time': str(date_time),
+                                                         'lang': lang,
+                                                         'word_count': str(word_count),
+                                                         })
+            # Create two sub-elements, appended to the tweet element, representing the text and the original_text,
+            # and set the text of those elements.
+            grandchild1 = ET.SubElement(child, 'text')
+            grandchild1.text = text
+            if include_original_text:
+                grandchild2 = ET.SubElement(child, 'original_text')
+                grandchild2.text = original_text
 
         xml_as_str = ET.tostring(root, encoding='unicode')
         # ↳ ElementTree sorts the dictionary of attributes by name before writing the tree to file.
