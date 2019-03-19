@@ -308,6 +308,18 @@ class Dataset:
 
         logger.info('Dropped %s users with no tweets: %s', format(len(dropped_user_ids), ',d'), dropped_user_ids)
 
+    def all_tweets_to_xml(self, include_original_text=False):
+        """Export the tweets of all the users in the dataset to XML files.
+
+        Args:
+            include_original_text: If False (default) the original_text element will be left out of the XML files.
+        """
+
+        for user in self.users:
+            user.tweets_to_xml(include_original_text=include_original_text)
+
+        logger.info("@ %.2f seconds: Finished exporting all tweets of the dataset to XML files.", time.process_time())
+
     def labels_to_xml(self):
         """Export the labels of the dataset to an XML file.
 
