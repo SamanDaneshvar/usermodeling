@@ -147,8 +147,11 @@ def preprocess_tweet(tweet, replacement_tags=True, output_mode='single'):
     """Pre-process a tweet.
 
     The following pre-processing operations are done on the tweet:
-    - Replace repeated character sequences of length 3 or greater with sequences of length 3
-    - Lowercase
+    By NLTK's TweetTokenizer:
+        - Replace repeated character sequences of length 3 or greater with sequences of length 3
+        - Lowercase
+        - Remove newline characters
+    By going through the tokens:
     - If *replacement_tags* = True, Replace all URLs and username mentions with the following tags:
         URL		    <URLURL>
         @Username   <UsernameMention>
@@ -167,8 +170,9 @@ def preprocess_tweet(tweet, replacement_tags=True, output_mode='single'):
         replaced_urls: List of replaced URLs in the tweet
         replaced_mentions: List of replaced @username mentions in the tweet.
 
-    IMPROVEMENTS TO MAKE:
-    - Instead of tokenizing and detokenizing, which is messy, the strings could be directly replaced using regex.
+    IMPROVEMENTS TO CONSIDER:
+    - Instead of tokenizing and detokenizing, which is messy and power intensive, the strings could be directly
+      replaced using regex.
     """
 
     replaced_urls = []  # Create an empty list
