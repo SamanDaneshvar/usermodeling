@@ -63,7 +63,7 @@ class Dataset:
         # Read the target users into a set. A set is more efficient than a list for lookups, etc.
         with open(USERS_LIST_PATH, 'r') as users_list_file:
             list_of_lines = users_list_file.read().splitlines()
-            target_users = set(list_of_lines[:5])  # TEMP %%%%
+            target_users = set(list_of_lines)
 
         user_ids_with_unfetched_demographics = []
 
@@ -288,14 +288,10 @@ class Dataset:
         logger.info('A total of %s non-english tweets were dropped.', format(dropped_tweets_count, ',d'))
 
     def drop_users_with_no_tweets(self):
-        """Remove any users of the dataset that have no tweets.
+        """Remove any users of the dataset that have no tweets."""
 
-        Returns:
-            A list of user IDs of the dropped users
-        """
-
-        dropped_user_ids = []
         users_to_remove = []
+        dropped_user_ids = []
 
         for user in self.users:
             if user.get_num_tweets() == 0:
@@ -308,6 +304,25 @@ class Dataset:
 
         logger.info('Dropped %s users with no tweets: %s', format(len(dropped_user_ids), ',d'), dropped_user_ids)
 
+    def drop_users_with_few_total_words(self, min_total_num_words):
+        """Remove any users of the dataset with fewer total number of words than the threshold"""
+
+        users_to_remove = []
+        dropped_user_ids = []
+
+        for user in self.users:
+            total_num_words = np.sum(user.get_word_counts())  # total number of words in all tweets of the user
+            if total_num_words < min_total_num_words:
+                # Refer to the *User.drop_retweets()* method (same idea).
+                users_to_remove.append(user)
+
+        for user in users_to_remove:
+            dropped_user_ids.append(user.get_id())
+            self.remove_user(user)
+
+        logger.info('Dropped %s users with less than %s total words in their tweets: %s',
+                    format(len(dropped_user_ids), ',d'), format(min_total_num_words, ',d'), dropped_user_ids)
+
     def all_tweets_to_xml(self, include_original_text=False):
         """Export the tweets of all the users in the dataset to XML files.
 
@@ -315,8 +330,13 @@ class Dataset:
             include_original_text: If False (default) the original_text element will be left out of the XML files.
         """
 
-        for user in self.users:
+        for i, user in enumerate(self.users):
             user.tweets_to_xml(include_original_text=include_original_text)
+
+            # Log the progress
+            if (i + 1) % 1000 == 0:
+                logger.info("@ %.2f seconds: Finished exporting the tweets of user #%s to XML file.",
+                            time.process_time(), format(i + 1, ',d'))
 
         logger.info("@ %.2f seconds: Finished exporting all tweets of the dataset to XML files.", time.process_time())
 
@@ -894,11 +914,11 @@ def main():
     # Constants
     DEMOGRAPHICS_CSV_PATH = 'data/Advanced Symbolics/2018-10-30 user_info, Canada Ignite 5.csv'
     #
-    USERS_LIST_PATH = 'data/Advanced Symbolics/List of users _ Batch 1 (934).txt'
-    # USERS_LIST_PATH = 'data/Advanced Symbolics/List of users _ Batch 1–7 (30,934).txt'
+    # USERS_LIST_PATH = 'data/Advanced Symbolics/List of users _ Batch 1 (934).txt'
+    USERS_LIST_PATH = 'data/Advanced Symbolics/List of users _ Batch 1–7 (30,934).txt'
     #
-    TWEET_CSV_BATCHES_DIR = 'P:/2018-12-20_13-31-03 _ Batch 1'
-    # TWEET_CSV_BATCHES_DIR = 'P:/'
+    # TWEET_CSV_BATCHES_DIR = 'P:/2018-12-20_13-31-03 _ Batch 1'
+    TWEET_CSV_BATCHES_DIR = 'P:/'
 
     dataset = Dataset()  # Constructor
     # Load the labels (demographics) and create users
@@ -923,8 +943,7 @@ def main():
     # Let's drop those users
     dataset.drop_users_with_no_tweets()
 
-    # TODO
-    # dataset.drop_users_with_few_total_words()
+    dataset.drop_users_with_few_total_words(100)
 
     dataset.produce_stats('ASI dataset stats')
     dataset.labels_to_xml()
