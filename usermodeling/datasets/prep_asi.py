@@ -308,6 +308,50 @@ class Dataset:
 
         logger.info('Dropped %s users with no tweets: %s', format(len(dropped_user_ids), ',d'), dropped_user_ids)
 
+    def labels_to_xml(self):
+        """Export the labels of the dataset to an XML file.
+
+        TODO
+        """
+
+        XML_DIR = 'data/out/'
+        XML_FILENAME = RUN_TIMESTAMP + ' Labels' + '.xml'
+
+        # Create an *Element* object representing the dataset
+        e0_root = ET.Element('dataset')
+
+        for user in self.users:
+            user_id = user.get_id()
+            gender = user.gender
+            age = user.age
+            location = user.location
+            race = user.race
+
+            # Create a sub-element—appended to the root (the dataset)—representing the user
+            e1_user = ET.SubElement(e0_root, 'user', attrib={'user_id': user_id,
+                                                        })
+            # Create sub-elements, appended to the user element, for the labels and set the text of the elements
+            # to the value of the labels. These would be our level 2 elements (*e2_gender*, etc.).
+            ET.SubElement(e1_user, 'gender').text = gender
+            ET.SubElement(e1_user, 'age').text = age
+            ET.SubElement(e1_user, 'location').text = location
+            ET.SubElement(e1_user, 'race').text = race
+
+        xml_as_str = ET.tostring(e0_root, encoding='unicode')
+        # Prettify the XML string. This will indent the tags with tabs and newlines
+        dom = minidom.parseString(xml_as_str)
+        xml_as_pretty_str = dom.toprettyxml()
+        # ↳ With no encoding argument, the result is a Unicode string, and the XML declaration in the
+        # resulting string does not specify an encoding.
+
+        # Create the directory if it does not exist.
+        os.makedirs(XML_DIR, exist_ok=True)
+        # Write the pretty XML string to a file
+        with open(os.path.join(XML_DIR, XML_FILENAME), 'w', encoding='utf-8') as xml_output_file:
+            xml_output_file.write(xml_as_pretty_str)
+
+        logger.info("@ %.2f seconds: Finished exporting the labels of the dataset to XML file.", time.process_time())
+
     def pickle(self):
         """Pickle the dataset object
 
