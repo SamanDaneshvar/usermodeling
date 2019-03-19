@@ -11,6 +11,9 @@ Remarks:
         (You will need to change the directory of the Command Prompt to the extracted folder)
     5. Done!
     Reference: https://stackoverflow.com/a/47106810/9933071
+
+- The *xml.etree.ElementTree* module is not secure against maliciously constructed data. Make sure the XML files
+are from a trusted source.
 """
 
 import csv
@@ -20,6 +23,8 @@ import os
 import pickle
 import sys
 import time
+from xml.dom import minidom
+from xml.etree import ElementTree as ET
 
 from polyglot.detect import Detector
 import numpy as np
@@ -58,7 +63,7 @@ class Dataset:
         # Read the target users into a set. A set is more efficient than a list for lookups, etc.
         with open(USERS_LIST_PATH, 'r') as users_list_file:
             list_of_lines = users_list_file.read().splitlines()
-            target_users = set(list_of_lines)
+            target_users = set(list_of_lines[:1])  # TEMP %%%%
 
         user_ids_with_unfetched_demographics = []
 
@@ -268,7 +273,7 @@ class Dataset:
 
         logger.info('@ %.2f seconds: Finished detecting the language of all "NA" tweets of the dataset',
                     time.process_time())
-        logger.info('Successfully detected the language of %s tweets. Failed on %s tweets',
+        logger.info('Successfully detected the language of %s tweets. Failed on %s tweets.',
                     format(num_success, ',d'), format(num_failed, ',d'))
 
     def drop_all_foreign_tweets(self):
@@ -386,7 +391,7 @@ class Dataset:
         CSV_PATH = os.path.join('data/out', CSV_FILENAME)
 
         # Header of the CSV file and rows to write
-        header = ['user_id', 'gender', 'age', 'num_tweets', 'less_than_3_words',
+        header = ['user_id', 'gender', 'age', 'location', 'num_tweets', 'less_than_3_words',
                   'lang_foreign', 'lang_na', 'lang_en', 'lang_und',
                   'total_num_words', 'newest_datetime', 'oldest_datetime']
         rows = []
@@ -395,6 +400,7 @@ class Dataset:
             user_id = user.get_id()
             gender = user.gender
             age = user.age
+            location = user.location
             num_tweets = user.get_num_tweets()
             total_num_words = np.sum(user.get_word_counts())  # total number of words in all tweets of the user
             datetimes = user.get_datetimes()
@@ -412,7 +418,7 @@ class Dataset:
             # Get the statistics of language of tweets for the user
             num_lang_en, num_lang_na, num_lang_und, num_lang_foreign = user.get_language_stats()
 
-            row = [user_id, gender, age, num_tweets, less_than_3_words,
+            row = [user_id, gender, age, location, num_tweets, less_than_3_words,
                    num_lang_foreign, num_lang_na, num_lang_en, num_lang_und,
                    total_num_words, newest_datetime, oldest_datetime]
             rows.append(row)
@@ -594,6 +600,84 @@ class User:
 
         return datetimes
 
+    def tweets_to_xml(self):
+        """Export the tweets of the user to an XML file
+
+        Remarks:
+            - A handy command:
+                dataset.get_user('user_id').tweets_to_xml()
+
+            - During debug, try *list(root)* to see the current state of the tree.
+        """
+
+        XML_DIR = 'data/out/' + RUN_TIMESTAMP + " Users' tweets"
+        XML_FILENAME = self.__id + '.xml'
+
+        # Create an *Element* object representing the user
+        root = ET.Element('user')
+
+        for tweet in self.__tweets[:5]:  # TEMP %%%%
+            word_count = tweet.word_count
+            lang = tweet.language
+            text = tweet.text
+            date_time = tweet.datetime
+            original_text = tweet.original_text
+
+            # Create a sub-element—appended to the root (the user)—representing the tweet
+            child = ET.SubElement(root, 'tweet', attrib={'word_count': str(word_count),
+                                                                  'lang': lang,
+                                                                  'text': text,
+                                                                  'date_time': str(date_time),
+                                                                  'original_text': original_text,
+                                                                  })
+
+        xml_as_str = ET.tostring(root, encoding='unicode')
+        # ↳ ElementTree sorts the dictionary of attributes by name before writing the tree to file.
+        # Prettify the XML string. This will indent the tags with tabs and newlines
+        dom = minidom.parseString(xml_as_str)
+        xml_as_pretty_str = dom.toprettyxml()
+        # ↳ With no encoding argument, the result is a Unicode string, and the XML declaration in the
+        # resulting string does not specify an encoding.
+
+        # Create the directory if it does not exist.
+        os.makedirs(XML_DIR, exist_ok=True)
+        # Write the pretty XML string to a file
+        with open(os.path.join(XML_DIR, XML_FILENAME), 'w', encoding='utf-8') as xml_output_file:
+            xml_output_file.write(xml_as_pretty_str)
+
+    def tweets_to_csv(self):
+        """Export the tweets of the user to a CSV file
+
+        A handy command:
+            dataset.get_user('user_id').tweets_to_csv()
+        """
+
+        CSV_DIR = 'data/out/' + RUN_TIMESTAMP + " Users' tweets"
+        CSV_FILENAME = self.__id + '.csv'
+
+        # Header of the CSV file and rows to write
+        header = ['word_count', 'lang', 'text', 'date_time ⯅', 'original_text']
+        rows = []
+
+        for tweet in self.__tweets:
+            word_count = tweet.word_count
+            lang = tweet.language
+            text = tweet.text
+            date_time = tweet.datetime
+            original_text = tweet.original_text
+
+            row = [word_count, lang, text, date_time, original_text]
+            rows.append(row)
+
+        # Create the directory if it does not exist.
+        os.makedirs(CSV_DIR, exist_ok=True)
+
+        # Write to the CSV file
+        with open(os.path.join(CSV_DIR, CSV_FILENAME), 'w', newline='', encoding='utf-8') as csv_output_file:
+            csv_writer = csv.writer(csv_output_file)
+            csv_writer.writerow(header)
+            csv_writer.writerows(rows)
+
 
 class Tweet:
     """Tweet class"""
@@ -759,20 +843,19 @@ def main():
     logger.info('A total of %s retweets were dropped.', format(sum(retweet_counts), ',d'))
 
     dataset.detect_language_of_all_na_tweets()
-
-    dataset.produce_stats('ASI dataset stats, 1. after lang detect')  # TEMP
-
     dataset.drop_all_foreign_tweets()
-
-    dataset.produce_stats('ASI dataset stats, 1. after dropping non-english')  # TEMP
-
-    # dataset.drop_all_short_tweets()
 
     # At this point, some users might have no tweets, either because an inconsistency between the list of users (when
     # loading the user demographics) and the existing tweets dataset, or because all of their tweets were retweets
     # or short tweets and were dropped in the previous operations.
     # Let's drop those users
     dataset.drop_users_with_no_tweets()
+
+    # TODO
+    # dataset.drop_users_with_few_total_words()
+
+    # dataset.produce_stats('ASI dataset stats')
+    dataset.get_user('1042229763472084993').tweets_to_xml()
 
 
     # # TODO
