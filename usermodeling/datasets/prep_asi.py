@@ -63,7 +63,7 @@ class Dataset:
         # Read the target users into a set. A set is more efficient than a list for lookups, etc.
         with open(USERS_LIST_PATH, 'r') as users_list_file:
             list_of_lines = users_list_file.read().splitlines()
-            target_users = set(list_of_lines[:1])  # TEMP %%%%
+            target_users = set(list_of_lines[:5])  # TEMP %%%%
 
         user_ids_with_unfetched_demographics = []
 
@@ -354,6 +354,8 @@ class Dataset:
 
     def pickle(self):
         """Pickle the dataset object
+
+        Deprecated: Not efficient.
 
         1. Remove the *original_text* attribute from all tweets in the dataset
         2. Serialize (pickle) the dataset
@@ -671,7 +673,7 @@ class User:
         # Create an *Element* object representing the user
         root = ET.Element('user')
 
-        for tweet in self.__tweets[:5]:  # TEMP %%%%
+        for tweet in self.__tweets:
             word_count = tweet.word_count
             lang = tweet.language
             text = tweet.text
@@ -708,6 +710,8 @@ class User:
 
     def tweets_to_csv(self):
         """Export the tweets of the user to a CSV file
+
+        Deprecated: Use *tweets_to_xml()* instead.
 
         A handy command:
             dataset.get_user('user_id').tweets_to_csv()
@@ -884,7 +888,6 @@ def main():
     TWEET_CSV_BATCHES_DIR = 'P:/2018-12-20_13-31-03 _ Batch 1'
     # TWEET_CSV_BATCHES_DIR = 'P:/'
 
-    # TODO: If loading from pickle, skip the following lines.
     dataset = Dataset()  # Constructor
     # Load the labels (demographics) and create users
     dataset.load_labels_and_create_users(DEMOGRAPHICS_CSV_PATH, USERS_LIST_PATH)
@@ -893,10 +896,6 @@ def main():
 
     # Preprocess: Determines the *__retweet*, *text*, and *word_count* attributes of all tweets
     dataset.preprocess_tweets()
-
-    # # TODO
-    # # Load the dataset from pickle
-    # dataset = Dataset.from_pickle('2019-03-15_18-53-43 dataset object.pickle')
 
     # Drop all the retweets
     retweet_counts = dataset.drop_all_retweets()
@@ -915,12 +914,9 @@ def main():
     # TODO
     # dataset.drop_users_with_few_total_words()
 
-    # dataset.produce_stats('ASI dataset stats')
-    dataset.get_user('1042229763472084993').tweets_to_xml()
-
-
-    # # TODO
-    # dataset.pickle()
+    dataset.produce_stats('ASI dataset stats')
+    dataset.labels_to_xml()
+    dataset.all_tweets_to_xml()
 
     # Log run time
     logger.info("@ %.2f seconds: Run finished", time.process_time())
