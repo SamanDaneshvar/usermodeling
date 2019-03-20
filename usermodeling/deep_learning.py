@@ -88,10 +88,10 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
             raise ValueError('The labels are expected to be "male" or "female". Encountered label "%s".' % text_label)
 
     # Process the merged tweets using NLTK's tweet tokenizer to replace repeated characters,
-    # and replace URLs and @Username mentions with <URLURL> and <UsernameMention>
+    # and remove URLs and @Username mentions
     processed_merged_tweets = []  # Create an empty list
     for merged_tweets_of_author in merged_tweets:
-        processed_merged_tweets.append(preprocess_tweet(merged_tweets_of_author))
+        processed_merged_tweets.append(preprocess_tweet(merged_tweets_of_author, replacement_tags=False))
 
     # Split the raw dataset into balanced (stratified) training+validation and test sets (split 20% for test set)
     processed_merged_tweets_trainval, processed_merged_tweets_test, labels_trainval, labels_test,\

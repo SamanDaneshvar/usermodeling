@@ -168,7 +168,7 @@ class Dataset:
                     # Counter++
                     num_processed_users += 1
 
-                    # Work around the UTF-8 error (in user_id='26526980')
+                    # Handle the UTF-8 error (in user_id='26526980')
                     try:
                         # Go through the tweets in the CSV file
                         with open(csv_file_path, 'r', newline='', encoding='utf-8') as csv_file:
@@ -726,19 +726,32 @@ class User:
                 grandchild2 = ET.SubElement(child, 'original_text')
                 grandchild2.text = original_text
 
-        xml_as_str = ET.tostring(root, encoding='unicode')
-        # ↳ ElementTree sorts the dictionary of attributes by name before writing the tree to file.
-        # Prettify the XML string. This will indent the tags with tabs and newlines
-        dom = minidom.parseString(xml_as_str)
-        xml_as_pretty_str = dom.toprettyxml()
-        # ↳ With no encoding argument, the result is a Unicode string, and the XML declaration in the
-        # resulting string does not specify an encoding.
+        # Handle the invalid token error (happens only in user_id='2347417501')
+        try:
+            xml_as_str = ET.tostring(root, encoding='unicode')
+            # ↳ ElementTree sorts the dictionary of attributes by name before writing the tree to file.
 
-        # Create the directory if it does not exist.
-        os.makedirs(XML_DIR, exist_ok=True)
-        # Write the pretty XML string to a file
-        with open(os.path.join(XML_DIR, XML_FILENAME), 'w', encoding='utf-8') as xml_output_file:
-            xml_output_file.write(xml_as_pretty_str)
+            # • Work around the invalid token error in user_id='2347417501'
+            # The problem with this user is the '\x01' character, which is an ASCII control character:
+            #   http://donsnotes.com/tech/charsets/ascii.html#cntrl
+            # Most ASCII control characters are not allowed in XML v1.0.
+            if self.__id == '2347417501':
+                # Remove the '\x01' character from the string
+                xml_as_str = xml_as_str.replace('\x01', '')
+
+            # Prettify the XML string. This will indent the tags with tabs and newlines
+            dom = minidom.parseString(xml_as_str)
+            xml_as_pretty_str = dom.toprettyxml()
+            # ↳ With no encoding argument, the result is a Unicode string, and the XML declaration in the
+            # resulting string does not specify an encoding.
+
+            # Create the directory if it does not exist.
+            os.makedirs(XML_DIR, exist_ok=True)
+            # Write the pretty XML string to a file
+            with open(os.path.join(XML_DIR, XML_FILENAME), 'w', encoding='utf-8') as xml_output_file:
+                xml_output_file.write(xml_as_pretty_str)
+        except Exception as e:
+            logger.error('Error in writing XML: %s | User ID: %s', e, self.get_id())
 
     def tweets_to_csv(self):
         """Export the tweets of the user to a CSV file
@@ -909,7 +922,13 @@ def decide_gender_age(gender_age):
 
 
 def main():
-    """The main function"""
+    """The main function
+
+    IMPROVEMENTS TO MAKE:
+    - Consider redesigning the script to load, process and export the data in batches (for instance, 1,000 users at
+    a time), because dealing with the whole dataset at once, fills up the memory and slows down the
+    program, significantly.
+    """
 
     # Constants
     DEMOGRAPHICS_CSV_PATH = 'data/Advanced Symbolics/2018-10-30 user_info, Canada Ignite 5.csv'
@@ -950,7 +969,7 @@ def main():
     dataset.all_tweets_to_xml()
 
     # Log run time
-    logger.info("@ %.2f seconds: Run finished", time.process_time())
+    logger.info("@ %.2f seconds: Run finished. Current date and time: %s", time.process_time(), datetime.today())
 
 
 ''' 

@@ -13,9 +13,9 @@ import logging
 import os
 import shutil
 import time
+from xml.etree import ElementTree
 
 import numpy as np
-from xml.etree import ElementTree
 
 
 def load_pan_data(xmls_directory, truth_path, write_to_txt_files=False, txts_destination_directory=None):
