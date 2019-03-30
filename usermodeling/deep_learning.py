@@ -18,7 +18,7 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
 from usermodeling.classical_ml import preprocess_tweet
-from usermodeling.datasets import process_data_files
+from usermodeling import datasets
 from usermodeling import def_train_model
 from usermodeling.utils import my_utils
 
@@ -74,7 +74,7 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
 
     # Load the raw texts and the labels (truths) from the files into lists
     merged_tweets, text_labels, author_ids, original_tweet_lengths =\
-        process_data_files.load_pan_data(XMLS_DIRECTORY, TRUTH_PATH)
+        datasets.process_data_files.load_pan_data(XMLS_DIRECTORY, TRUTH_PATH)
 
     # Map textual labels to numeric labels:
     # 'female' → 0 and 'male' → 1
@@ -95,7 +95,7 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
 
     # Split the raw dataset into balanced (stratified) training+validation and test sets (split 20% for test set)
     processed_merged_tweets_trainval, processed_merged_tweets_test, labels_trainval, labels_test,\
-        author_ids_trainval, author_ids_test, = train_test_split(processed_merged_tweets, labels, author_ids,
+        author_ids_trainval, author_ids_test = train_test_split(processed_merged_tweets, labels, author_ids,
                                                                  test_size=0.2, random_state=42, stratify=labels)
     # ↳ *stratify=labels* selects a balanced sample from the data, with the same class proportion as the *labels* list.
 
@@ -141,9 +141,87 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
 
     # TODO: What should the value of MAX_SEQUENCE_LEN be?
     #   - Required in the Embedding layer. Inconsistency between test set and train+val set in pad_sequences.
-    #   - Should we feed the data to the network on tweet level? (like the PAN '17 Miura paper)
 
     # TODO: GloVe: why did it fail?
+
+    return x_train, x_val, x_test, y_train, y_val, y_test, word_index
+
+
+def load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN):
+    """Load, vectorize and split the ASI (Advanced Symbolics Inc.) data
+
+    - Load the preprocessed dataset (URLs and username mentions removed, repeated characters normalized,
+        lowercased, etc.)
+    - Split the dataset into balanced (stratified) training (60%), validation (20%), and test (20%) sets
+    - Vectorize (tokenize) the raw text
+    """
+
+    # Load the raw texts and the labels from the files into lists
+    user_ids, processed_merged_tweets, text_genders, text_ages =\
+        datasets.asi.load('data/Advanced Symbolics/Labels.xml',
+                          'data/Advanced Symbolics/Tweets', stratified_subset='genders')
+
+    # Map textual gender labels to numeric labels:
+    # 'female' → 0 and 'male' → 1
+    gender_labels = []
+    for text_label in text_genders:
+        if text_label == 'female':
+            gender_labels.append(0)
+        elif text_label == 'male':
+            gender_labels.append(1)
+        else:
+            raise ValueError('The labels are expected to be "male" or "female". Encountered label "%s".' % text_label)
+
+    # TODO (later): Map textual age labels to numeric labels
+
+    # Split the raw dataset into balanced (stratified) training+validation and test sets (split 20% for test set)
+    (processed_merged_tweets_trainval, processed_merged_tweets_test,
+     gender_labels_trainval, gender_labels_test,
+     user_ids_trainval, user_ids_test) = train_test_split(processed_merged_tweets, gender_labels, user_ids,
+                                                          test_size=0.2, random_state=42, stratify=gender_labels)
+    # ↳ *stratify=gender_labels* selects a balanced sample from the data, with the same class proportion as
+    #   the *gender_labels* list.
+
+    # • Vectorize (tokenize) the training+validation raw text (copied from *load_split_and_vectorize_pan18ap_data*)
+    logger.info("MAX_SEQUENCE_LEN = %s  |  MAX_WORDS = %s", format(MAX_SEQUENCE_LEN, ',d'), format(MAX_WORDS, ',d'))
+    #
+    tokenizer = Tokenizer(num_words=MAX_WORDS)
+    # Build the word index
+    tokenizer.fit_on_texts(processed_merged_tweets_trainval)
+    # How you can recover the word index that was computed
+    word_index = tokenizer.word_index
+    # ↳ The word_index dictionary includes all the words in the documents.
+    # Turn the strings into lists of integer indices.
+    # Any word other than the *MAX_WORDS* most frequent words will be ignored in this process.
+    sequences_trainval = tokenizer.texts_to_sequences(processed_merged_tweets_trainval)
+    logger.info('@ %.2f seconds: Finished tokenizing the training+validation raw texts', time.process_time())
+    logger.info('Found %s unique tokens.' % format(len(word_index), ',d'))
+    #
+    # Turn the list of integers into a 2D integer tensor of shape (samples, maxlen)
+    x_trainval = pad_sequences(sequences_trainval, maxlen=MAX_SEQUENCE_LEN)
+    #
+    y_trainval = np.asarray(gender_labels_trainval)
+
+    # Split the training+validation dataset into balanced (stratified) training and validation sets
+    # Note: 20% (validation set) is 25% of 80% (training+validation), hence the *test_size=0.25* option.
+    # TODO: Stratify
+    x_train, x_val, y_train, y_val, user_ids_train, user_ids_val = \
+        train_test_split(x_trainval, y_trainval, user_ids_trainval,
+                         test_size=0.25, random_state=42, stratify=y_trainval)
+    # ↳ Note: The array-like object given to the *stratify* option should have the same number of samples as the inputs.
+
+    # Vectorize (tokenize) the test set raw text
+    # Note that the tokenizer is already fit on the training+validation set
+    sequences_test = tokenizer.texts_to_sequences(processed_merged_tweets_test)
+    logger.info('@ %.2f seconds: Finished tokenizing the test set raw texts', time.process_time())
+    #
+    x_test = pad_sequences(sequences_test, maxlen=MAX_SEQUENCE_LEN)
+    y_test = np.asarray(gender_labels_test)
+
+    logger.info('Shape of data  (x) tensor = {training: %s | validation: %s | test: %s}',
+                x_train.shape, x_val.shape, x_test.shape)
+    logger.info('Shape of label (y) tensor = {training: %s | validation: %s | test: %s}',
+                y_train.shape, y_val.shape, y_test.shape)
 
     return x_train, x_val, x_test, y_train, y_val, y_test, word_index
 
@@ -166,7 +244,7 @@ def prepare_glove_embeddings(MAX_WORDS, EMBEDDING_DIM, word_index):
     # Load GloVe
     GLOVE_DIR = 'data/GloVe - Twitter Word Embeddings'
     GLOVE_PATH = os.path.join(GLOVE_DIR, 'glove.twitter.27B.100d.txt')
-    embeddings_index = process_data_files.load_glove_embeddings(GLOVE_PATH)
+    embeddings_index = datasets.process_data_files.load_glove_embeddings(GLOVE_PATH)
 
     # Prepare the GloVe word embeddings matrix
     embedding_matrix = np.zeros((MAX_WORDS, EMBEDDING_DIM))  # Initialize with zeros
@@ -293,8 +371,11 @@ def main():
     # Flatten and Dense layers upstream. More info: https://keras.io/layers/embeddings/
     MAX_SEQUENCE_LEN = 2644
 
+    # (x_train, x_val, x_test,
+    #  y_train, y_val, y_test, word_index) = load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN)
+
     (x_train, x_val, x_test,
-     y_train, y_val, y_test, word_index) = load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN)
+     y_train, y_val, y_test, word_index) = load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN)
 
     trained_model, history = def_train_model.bidirectional_rnn(
         x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)

@@ -124,7 +124,7 @@ class Dataset:
                 # Add this user to the dataset
                 self.add_user(this_user)
                 # Set the attributes of the user
-                # TODO: Race
+                # Note: Skipped race labels
                 this_user.gender = gender
                 this_user.age = age
                 this_user.location = location
@@ -343,7 +343,16 @@ class Dataset:
     def labels_to_xml(self):
         """Export the labels of the dataset to an XML file.
 
-        TODO
+        The elements of the XML file will be in the following form:
+            <dataset>
+                <user user_id="11111111">
+                    <gender>female</gender>
+                    <age>[25,34]</age>
+                    <location>Toronto</location>
+                    <race/>
+                </user>
+                ...
+            </dataset>
         """
 
         XML_DIR = 'data/out/'
@@ -687,6 +696,7 @@ class User:
                     <text>The processed text.</text>
                     <original_text>The original text. Could include newline characters.</original_text>
                 </tweet>
+                ...
             </user>
 
         Args:
