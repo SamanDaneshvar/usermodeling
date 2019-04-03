@@ -183,8 +183,11 @@ def load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     #   the *gender_labels* list.
 
     # • Vectorize (tokenize) the training+validation raw text (copied from *load_split_and_vectorize_pan18ap_data*)
-    logger.info("MAX_SEQUENCE_LEN = %s  |  MAX_WORDS = %s", format(MAX_SEQUENCE_LEN, ',d'), format(MAX_WORDS, ',d'))
-    #
+    logger.info("MAX_SEQUENCE_LEN = %s  |  MAX_WORDS = %s",
+                format(MAX_SEQUENCE_LEN, ',d') if MAX_SEQUENCE_LEN is not None else None,
+                format(MAX_WORDS, ',d') if MAX_WORDS is not None else None
+                )
+    # ↳ Work around the TypeError when one of the values is *None*.
     tokenizer = Tokenizer(num_words=MAX_WORDS)
     # Build the word index
     tokenizer.fit_on_texts(processed_merged_tweets_trainval)
