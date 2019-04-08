@@ -207,7 +207,7 @@ def load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN):
 
     # Split the training+validation dataset into balanced (stratified) training and validation sets
     # Note: 20% (validation set) is 25% of 80% (training+validation), hence the *test_size=0.25* option.
-    # TODO: Stratify
+    # TODO: Stratify (done!)
     x_train, x_val, y_train, y_val, user_ids_train, user_ids_val = \
         train_test_split(x_trainval, y_trainval, user_ids_trainval,
                          test_size=0.25, random_state=42, stratify=y_trainval)
