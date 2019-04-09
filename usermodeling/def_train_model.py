@@ -109,7 +109,7 @@ def bidirectional_rnn(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LE
                   metrics=['acc'],
                   )
     history = model.fit(x_train, y_train,
-                        epochs=20,
+                        epochs=10,
                         batch_size=128,
                         validation_data=(x_val, y_val),
                         )
