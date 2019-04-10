@@ -1,6 +1,7 @@
 """Utilities"""
 
 from datetime import datetime
+import getpass
 import hashlib
 import logging
 import os
@@ -121,7 +122,7 @@ def set_working_directory(proj_dir=1):
 
     # Log current date and time, computer and user name
     logger.info('Current date and time:  %s', datetime.today())
-    logger.info('Computer and user name: %s, %s', os.getenv('COMPUTERNAME'), os.getlogin())
+    logger.info('Computer and user name: %s, %s', os.getenv('COMPUTERNAME'), getpass.getuser())
     # ↳ For a full list of environment variables and their values, call *os.environ*
 
     # Get the script path (of the script that is running in the main scope)
