@@ -388,7 +388,7 @@ def main():
         x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
 
     serialize_model_and_history(trained_model, history)
-    log_plot_training_performance(history, PLOT=True)
+    log_plot_training_performance(history, PLOT=False)  # Note: Cannot plot on Compute Canada nodes.
 
     evaluate_model_on_test_set(trained_model, x_test, y_test)
 
