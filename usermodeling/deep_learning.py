@@ -1,5 +1,5 @@
 # Fix the SyntaxError (http://python.org/dev/peps/pep-0263/) on Compute Canada's login node
-# coding=<utf-8>
+# coding=utf-8
 
 """Perform deep learning experiments on the datasets
 
