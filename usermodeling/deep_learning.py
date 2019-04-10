@@ -311,11 +311,12 @@ def serialize_model_and_history(model, history):
         pickle.dump(history.history, pickle_output_file)
 
 
-def plot_training_performance(history):
+def log_plot_training_performance(history, PLOT=True):
     """Plot and log the model's performance over time during training and validation
 
     Args:
         history: The history object returned by the *model.fit* method in Keras.
+        PLOT: If True (default), will plot the model's performance. If False, will only log the model's performance.
     """
 
     acc = history.history['acc']
@@ -330,23 +331,24 @@ def plot_training_performance(history):
     logger.info('Training loss: %s', loss)
     logger.info('Validation loss: %s', val_loss)
 
-    # Create a figure with two subplots
-    figure, (ax1, ax2) = plt.subplots(2, 1)
+    if PLOT:
+        # Create a figure with two subplots
+        figure, (ax1, ax2) = plt.subplots(2, 1)
 
-    ax1.plot(epochs, acc, '.:', label='Training accuracy')
-    ax1.plot(epochs, val_acc, 'o-', label='Validation accuracy')
-    ax1.set_ylabel('accuracy')
-    ax1.legend()
+        ax1.plot(epochs, acc, '.:', label='Training accuracy')
+        ax1.plot(epochs, val_acc, 'o-', label='Validation accuracy')
+        ax1.set_ylabel('accuracy')
+        ax1.legend()
 
-    ax2.plot(epochs, loss, '.:', label='Training loss')
-    ax2.plot(epochs, val_loss, 'o-', label='Validation loss')
-    ax2.set_ylabel('loss')
-    ax2.set_xlabel('epoch')
-    ax2.legend()
+        ax2.plot(epochs, loss, '.:', label='Training loss')
+        ax2.plot(epochs, val_loss, 'o-', label='Validation loss')
+        ax2.set_ylabel('loss')
+        ax2.set_xlabel('epoch')
+        ax2.legend()
 
-    figure.suptitle('Accuracy and loss for the training and validation')
+        figure.suptitle('Accuracy and loss for the training and validation')
 
-    plt.show()
+        plt.show()
 
 
 def evaluate_model_on_test_set(model, x_test, y_test):
@@ -386,7 +388,7 @@ def main():
         x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
 
     serialize_model_and_history(trained_model, history)
-    plot_training_performance(history)
+    log_plot_training_performance(history, PLOT=True)
 
     evaluate_model_on_test_set(trained_model, x_test, y_test)
 
