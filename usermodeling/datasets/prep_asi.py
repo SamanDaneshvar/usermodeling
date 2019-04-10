@@ -414,7 +414,7 @@ class Dataset:
                     time.process_time())
 
         # Create the directory if it does not exist.
-        os.makedirs(os.path.dirname(PICKLES_DIR), exist_ok=True)
+        os.makedirs(PICKLES_DIR, exist_ok=True)
 
         # Pickle
         with open(os.path.join(PICKLES_DIR, DATASET_PICKLE_FILENAME), 'wb') as pickle_output_file:

@@ -210,7 +210,6 @@ def load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN):
 
     # Split the training+validation dataset into balanced (stratified) training and validation sets
     # Note: 20% (validation set) is 25% of 80% (training+validation), hence the *test_size=0.25* option.
-    # TODO: Stratify (done!)
     x_train, x_val, y_train, y_val, user_ids_train, user_ids_val = \
         train_test_split(x_trainval, y_trainval, user_ids_trainval,
                          test_size=0.25, random_state=42, stratify=y_trainval)
@@ -293,7 +292,7 @@ def serialize_model_and_history(model, history):
     YAML_FILENAME = RUN_TIMESTAMP + ' ' + 'model architecture' + '.yaml'
     WEIGHTS_FILENAME = RUN_TIMESTAMP + ' ' + 'model weights' + '.h5'
     # Create the directory if it does not exist.
-    os.makedirs(os.path.dirname(MODELS_DIR), exist_ok=True)
+    os.makedirs(MODELS_DIR, exist_ok=True)
     # Save the architecture of the model (not its weights or its training configuration) to a YAML file
     # YAML (compared to JSON) is more suitable for configuration files.
     model_as_yaml_string = model.to_yaml()
@@ -306,7 +305,7 @@ def serialize_model_and_history(model, history):
     PICKLES_DIR = 'data/out/pickles'
     HISTORY_PICKLE_FILENAME = RUN_TIMESTAMP + ' ' + 'history' + '.pickle'
     # Create the directory if it does not exist.
-    os.makedirs(os.path.dirname(PICKLES_DIR), exist_ok=True)
+    os.makedirs(PICKLES_DIR, exist_ok=True)
     # Pickle
     with open(os.path.join(PICKLES_DIR, HISTORY_PICKLE_FILENAME), 'wb') as pickle_output_file:
         pickle.dump(history.history, pickle_output_file)
