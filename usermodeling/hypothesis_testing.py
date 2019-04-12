@@ -1,5 +1,6 @@
 """Hypothesis testing and compare experiment results"""
 
+from io import BytesIO
 import logging
 import os
 import pickle
@@ -84,7 +85,7 @@ def legacy_func():
         print("No significant difference between the means: Samples are likely drawn from the same distribution")
 
 
-def plot_training_performance_from_pickle(run_timestamp):
+def plot_training_performance_from_pickle(run_timestamp, mode=None):
     """Load a pickled *history.history* dictionary and plot its information
 
     This function gets a timestamp string as input and loads its corresponding pickled *history.history* dictionary.
@@ -95,21 +96,37 @@ def plot_training_performance_from_pickle(run_timestamp):
     This is useful to review and compare the performance of the models in previous experiments.
 
     Args:
-        run_timestamp: A string containing the date and time of the target run with the format '%Y-%m-%d_%H-%M-%S'.
+        - run_timestamp: A string containing the date and time of the target run with the format '%Y-%m-%d_%H-%M-%S'.
         This string can also contain other characters after the timestamp. As long as the string begins with a
         timestamp in the above format, and there is some whitespace characters between the timestamp and the rest of
         the string, the rest of the string will be trimmed and ignored.
+        - mode: If 'compute canada', some adjustments will be made to the pickles directory and the pickled file before
+        unpickling, as a workaround to a bug in NumPy 1.16.0.
     """
 
     # In case the input character contains other characters after the timestring, trim the rest of it
     run_timestamp = run_timestamp.split()[0]
 
-    PICKLES_DIR = 'data/out/pickles'
+    if mode == 'compute canada':
+        PICKLES_DIR = 'data/out/. Compute Canada/pickles'
+    else:
+        PICKLES_DIR = 'data/out/pickles'
+
     HISTORY_PICKLE_FILENAME = run_timestamp + ' ' + 'history' + '.pickle'
 
     # Unpickle the *history.history* dictionary
     with open(os.path.join(PICKLES_DIR, HISTORY_PICKLE_FILENAME), 'rb') as pickle_input_file:
-        history_dot_history = pickle.load(pickle_input_file)
+        if mode == 'compute canada':
+            # Quick workaround: Replace the "cnumpy.core._multiarray_umath" string with "cnumpy.core.multiarray"
+            # Due to bug in NumPy 1.16.0, on the first line of the pickles written by Compute Canada nodes,
+            # the above string is different.
+            pickle_as_bytestring = pickle_input_file.read()
+            pickle_as_bytestring = pickle_as_bytestring.replace(b'._multiarray_umath', b'.multiarray')
+            new_pickle_file = BytesIO(pickle_as_bytestring)
+            history_dot_history = pickle.load(new_pickle_file)
+        else:
+            # The regular unpickling
+            history_dot_history = pickle.load(pickle_input_file)
 
     acc = history_dot_history['acc']
     val_acc = history_dot_history['val_acc']
@@ -147,6 +164,8 @@ if __name__ == '__main__':
     my_utils.set_working_directory(1)
     # legacy_func()
 
-    plot_training_performance_from_pickle('2019-03-06_15-42-48 deep_learning __ LSTM')
+    plot_training_performance_from_pickle('2019-04-09_21-22-52 deep_learning __ ASI, 22k users, maxlen=2,644',
+                                          mode='compute canada')
+    # plot_training_performance_from_pickle('2019-03-06_15-42-48 deep_learning __ LSTM')
     # plot_training_performance_from_pickle('2019-03-06_17-50-01 deep_learning __ GRU')
     plt.show()
