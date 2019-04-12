@@ -166,6 +166,7 @@ if __name__ == '__main__':
 
     plot_training_performance_from_pickle('2019-04-09_21-22-52 deep_learning __ ASI, 22k users, maxlen=2,644',
                                           mode='compute canada')
-    # plot_training_performance_from_pickle('2019-03-06_15-42-48 deep_learning __ LSTM')
-    # plot_training_performance_from_pickle('2019-03-06_17-50-01 deep_learning __ GRU')
+    plot_training_performance_from_pickle('2019-04-10_01-23-46 deep_learning __ ASI, 22k users, maxlen=20k',
+                                          mode='compute canada')
+
     plt.show()
