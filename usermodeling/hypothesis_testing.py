@@ -119,7 +119,7 @@ def plot_training_performance_from_pickle(run_timestamp, mode=None):
         if mode == 'compute canada':
             # Quick workaround: Replace the "cnumpy.core._multiarray_umath" string with "cnumpy.core.multiarray"
             # Due to bug in NumPy 1.16.0, on the first line of the pickles written by Compute Canada nodes,
-            # the above string is different.
+            # the above string is different. More info: https://github.com/numpy/numpy/issues/12977
             pickle_as_bytestring = pickle_input_file.read()
             pickle_as_bytestring = pickle_as_bytestring.replace(b'._multiarray_umath', b'.multiarray')
             new_pickle_file = BytesIO(pickle_as_bytestring)
