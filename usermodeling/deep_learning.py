@@ -384,7 +384,9 @@ def main():
     (x_train, x_val, x_test,
      y_train, y_val, y_test, word_index) = load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN)
 
-    trained_model, history = def_train_model.bidirectional_rnn(
+    # trained_model, history = def_train_model.bidirectional_rnn(
+    #     x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
+    trained_model, history = def_train_model.basic_fully_connected(
         x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
 
     serialize_model_and_history(trained_model, history)

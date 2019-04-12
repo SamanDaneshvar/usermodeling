@@ -13,7 +13,7 @@ from keras.models import Sequential
 def basic_fully_connected(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
     """Define and train a basic, fully connected model with word embeddings"""
 
-    EMBEDDING_DIM = 100
+    EMBEDDING_DIM = 8
 
     # • Define the model
     model = Sequential()
