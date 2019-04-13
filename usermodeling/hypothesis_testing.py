@@ -164,9 +164,10 @@ if __name__ == '__main__':
     my_utils.set_working_directory(1)
     # legacy_func()
 
-    plot_training_performance_from_pickle('2019-04-09_21-22-52 deep_learning __ ASI, 22k users, maxlen=2,644',
-                                          mode='compute canada')
-    plot_training_performance_from_pickle('2019-04-10_01-23-46 deep_learning __ ASI, 22k users, maxlen=20k',
-                                          mode='compute canada')
+    # plot_training_performance_from_pickle('2019-04-09_21-22-52 deep_learning __ ASI, 22k users, maxlen=2,644',
+    #                                       mode='compute canada')
+    # plot_training_performance_from_pickle('2019-04-10_01-23-46 deep_learning __ ASI, 22k users, maxlen=20k',
+    #                                       mode='compute canada')
+    plot_training_performance_from_pickle('2019-04-12_18-06-59')
 
     plt.show()
