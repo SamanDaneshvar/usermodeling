@@ -241,7 +241,7 @@ def load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     # Vectorize (tokenize) the PAN18AP test set raw text
     # Note that the tokenizer is already fit on the training+validation set
     sequences_test_pan18ap = tokenizer.texts_to_sequences(pan18ap_processed_merged_tweets_test)
-    logger.info('@ %.2f seconds: Finished tokenizing the PAN 2018 Author Profiling test set raw texts',
+    logger.info('@ %.2f seconds: Finished tokenizing the PAN18AP test set raw texts',
                 time.process_time())
     #
     x_test_pan18ap = pad_sequences(sequences_test_pan18ap, maxlen=MAX_SEQUENCE_LEN)
@@ -378,9 +378,12 @@ def log_plot_training_performance(history, PLOT=True):
 def evaluate_model_on_test_set(model, x_test, y_test, TEST_SET_LABEL=''):
     """Evaluate the model (already trained) on the test set"""
 
+    # Add a space character before the test set label if it's not blank
+    space_control = ' ' if TEST_SET_LABEL != '' else ''
+
     metrics_values = model.evaluate(x_test, y_test)
-    logger.info('@ %.2f seconds: Finished evaluating the model on the %s test set',
-                time.process_time(), TEST_SET_LABEL)
+    logger.info('@ %.2f seconds: Finished evaluating the model on the%s%s test set',
+                time.process_time(), space_control, TEST_SET_LABEL)
     for name, value in zip(model.metrics_names, metrics_values):
         logger.info("%s = %s", name, value)
 
@@ -420,10 +423,8 @@ def main():
 
     # evaluate_model_on_test_set(trained_model, x_test, y_test)
 
-    evaluate_model_on_test_set(trained_model, x_test_asi, y_test_asi,
-                               TEST_SET_LABEL='ASI')
-    evaluate_model_on_test_set(trained_model, x_test_pan18ap, y_test_pan18ap,
-                               TEST_SET_LABEL='PAN 2018 Author Profiling')
+    evaluate_model_on_test_set(trained_model, x_test_asi, y_test_asi, TEST_SET_LABEL='ASI')
+    evaluate_model_on_test_set(trained_model, x_test_pan18ap, y_test_pan18ap, TEST_SET_LABEL='PAN18AP')
 
     # Destroy the current TF graph and create a new one, to ensure reproducible results.
     # This is also useful to avoid clutter from old models/layers.
