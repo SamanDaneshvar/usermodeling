@@ -72,11 +72,46 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     - Vectorize (tokenize) the raw text
     """
 
+    # Load and pre-process the PAN 2018 English dataset and split 20% for test
+    (processed_merged_tweets_trainval, processed_merged_tweets_test,
+     labels_trainval, labels_test, author_ids_trainval, author_ids_test) = _load_split_pan18ap()
+
+    # Vectorize the training+validation raw text and split it into stratified training and validation sets
+    (x_train, x_val, y_train, y_val,
+     tokenizer, word_index) = _vectorize_split_trainval(processed_merged_tweets_trainval, labels_trainval,
+                                                        author_ids_trainval, MAX_WORDS, MAX_SEQUENCE_LEN)
+
+    # Vectorize (tokenize) the test set raw text
+    # Note that the tokenizer is already fit on the training+validation set
+    sequences_test = tokenizer.texts_to_sequences(processed_merged_tweets_test)
+    logger.info('@ %.2f seconds: Finished tokenizing the test set raw texts', time.process_time())
+    #
+    x_test = pad_sequences(sequences_test, maxlen=MAX_SEQUENCE_LEN)
+    y_test = np.asarray(labels_test)
+
+    logger.info('Shape of data  (x) tensor = {training: %s | validation: %s | test: %s}',
+                x_train.shape, x_val.shape, x_test.shape)
+    logger.info('Shape of label (y) tensor = {training: %s | validation: %s | test: %s}',
+                y_train.shape, y_val.shape, y_test.shape)
+
+    # TODO: GloVe: why did it fail?
+
+    return x_train, x_val, x_test, y_train, y_val, y_test, word_index
+
+
+def _load_split_pan18ap():
+    """Load and pre-process the PAN 2018 English dataset and split 20% for test
+
+    - Load the English training dataset of the PAN 2018 Author Profiling task
+    - Pre-process the raw text (replace URLs, etc.)
+    - Split 20% of the raw dataset for test set (stratified)
+    """
+
     XMLS_DIRECTORY = 'data/PAN 2018, Author Profiling/en/text'
     TRUTH_PATH = 'data/PAN 2018, Author Profiling/en/en.txt'
 
     # Load the raw texts and the labels (truths) from the files into lists
-    merged_tweets, text_labels, author_ids, original_tweet_lengths =\
+    merged_tweets, text_labels, author_ids, original_tweet_lengths = \
         datasets.process_data_files.load_pan_data(XMLS_DIRECTORY, TRUTH_PATH)
 
     # Map textual labels to numeric labels:
@@ -97,12 +132,23 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
         processed_merged_tweets.append(preprocess_tweet(merged_tweets_of_author, replacement_tags=False))
 
     # Split the raw dataset into balanced (stratified) training+validation and test sets (split 20% for test set)
-    processed_merged_tweets_trainval, processed_merged_tweets_test, labels_trainval, labels_test,\
-        author_ids_trainval, author_ids_test = train_test_split(processed_merged_tweets, labels, author_ids,
-                                                                 test_size=0.2, random_state=42, stratify=labels)
+    processed_merged_tweets_trainval, processed_merged_tweets_test, labels_trainval, labels_test, \
+    author_ids_trainval, author_ids_test = train_test_split(processed_merged_tweets, labels, author_ids,
+                                                            test_size=0.2, random_state=42, stratify=labels)
     # ↳ *stratify=labels* selects a balanced sample from the data, with the same class proportion as the *labels* list.
 
-    # • Vectorize (tokenize) the training+validation raw text
+    return (processed_merged_tweets_trainval, processed_merged_tweets_test,
+            labels_trainval, labels_test, author_ids_trainval, author_ids_test)
+
+
+def _vectorize_split_trainval(processed_merged_tweets_trainval, labels_trainval, user_ids_trainval,
+                              MAX_WORDS, MAX_SEQUENCE_LEN):
+    """Vectorize the training+validation raw text and split it into stratified training and validation sets
+
+    - Vectorize (tokenize) the training+validation raw text
+    - Split the training+validation dataset into balanced (stratified) training and validation sets
+    """
+
     logger.info("MAX_SEQUENCE_LEN = %s  |  MAX_WORDS = %s",
                 format(MAX_SEQUENCE_LEN, ',d') if MAX_SEQUENCE_LEN is not None else None,
                 format(MAX_WORDS, ',d') if MAX_WORDS is not None else None
@@ -127,27 +173,12 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
 
     # Split the training+validation dataset into balanced (stratified) training and validation sets
     # Note: 20% (validation set) is 25% of 80% (training+validation), hence the *test_size=0.25* option.
-    x_train, x_val, y_train, y_val, author_ids_train, author_ids_val = \
-        train_test_split(x_trainval, y_trainval, author_ids_trainval,
+    x_train, x_val, y_train, y_val, user_ids_train, user_ids_val = \
+        train_test_split(x_trainval, y_trainval, user_ids_trainval,
                          test_size=0.25, random_state=42, stratify=y_trainval)
     # ↳ Note: The array-like object given to the *stratify* option should have the same number of samples as the inputs.
 
-    # Vectorize (tokenize) the test set raw text
-    # Note that the tokenizer is already fit on the training+validation set
-    sequences_test = tokenizer.texts_to_sequences(processed_merged_tweets_test)
-    logger.info('@ %.2f seconds: Finished tokenizing the test set raw texts', time.process_time())
-    #
-    x_test = pad_sequences(sequences_test, maxlen=MAX_SEQUENCE_LEN)
-    y_test = np.asarray(labels_test)
-
-    logger.info('Shape of data  (x) tensor = {training: %s | validation: %s | test: %s}',
-                x_train.shape, x_val.shape, x_test.shape)
-    logger.info('Shape of label (y) tensor = {training: %s | validation: %s | test: %s}',
-                y_train.shape, y_val.shape, y_test.shape)
-
-    # TODO: GloVe: why did it fail?
-
-    return x_train, x_val, x_test, y_train, y_val, y_test, word_index
+    return x_train, x_val, y_train, y_val, tokenizer, word_index
 
 
 def load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN):
@@ -187,35 +218,10 @@ def load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     # ↳ *stratify=gender_labels* selects a balanced sample from the data, with the same class proportion as
     #   the *gender_labels* list.
 
-    # • Vectorize (tokenize) the training+validation raw text (copied from *load_split_and_vectorize_pan18ap_data*)
-    logger.info("MAX_SEQUENCE_LEN = %s  |  MAX_WORDS = %s",
-                format(MAX_SEQUENCE_LEN, ',d') if MAX_SEQUENCE_LEN is not None else None,
-                format(MAX_WORDS, ',d') if MAX_WORDS is not None else None
-                )
-    # ↳ Work around the TypeError when one of the values is *None*.
-    tokenizer = Tokenizer(num_words=MAX_WORDS)
-    # Build the word index
-    tokenizer.fit_on_texts(processed_merged_tweets_trainval)
-    # How you can recover the word index that was computed
-    word_index = tokenizer.word_index
-    # ↳ The word_index dictionary includes all the words in the documents.
-    # Turn the strings into lists of integer indices.
-    # Any word other than the *MAX_WORDS* most frequent words will be ignored in this process.
-    sequences_trainval = tokenizer.texts_to_sequences(processed_merged_tweets_trainval)
-    logger.info('@ %.2f seconds: Finished tokenizing the training+validation raw texts', time.process_time())
-    logger.info('Found %s unique tokens.' % format(len(word_index), ',d'))
-    #
-    # Turn the list of integers into a 2D integer tensor of shape (samples, maxlen)
-    x_trainval = pad_sequences(sequences_trainval, maxlen=MAX_SEQUENCE_LEN)
-    #
-    y_trainval = np.asarray(gender_labels_trainval)
-
-    # Split the training+validation dataset into balanced (stratified) training and validation sets
-    # Note: 20% (validation set) is 25% of 80% (training+validation), hence the *test_size=0.25* option.
-    x_train, x_val, y_train, y_val, user_ids_train, user_ids_val = \
-        train_test_split(x_trainval, y_trainval, user_ids_trainval,
-                         test_size=0.25, random_state=42, stratify=y_trainval)
-    # ↳ Note: The array-like object given to the *stratify* option should have the same number of samples as the inputs.
+    # Vectorize the training+validation raw text and split it into stratified training and validation sets
+    (x_train, x_val, y_train, y_val,
+     tokenizer, word_index) = _vectorize_split_trainval(processed_merged_tweets_trainval, gender_labels_trainval,
+                                                        user_ids_trainval, MAX_WORDS, MAX_SEQUENCE_LEN)
 
     # Vectorize (tokenize) the test set raw text
     # Note that the tokenizer is already fit on the training+validation set
