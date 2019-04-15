@@ -103,8 +103,11 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     # ↳ *stratify=labels* selects a balanced sample from the data, with the same class proportion as the *labels* list.
 
     # • Vectorize (tokenize) the training+validation raw text
-    logger.info("MAX_SEQUENCE_LEN = %s  |  MAX_WORDS = %s", format(MAX_SEQUENCE_LEN, ',d'), format(MAX_WORDS, ',d'))
-    #
+    logger.info("MAX_SEQUENCE_LEN = %s  |  MAX_WORDS = %s",
+                format(MAX_SEQUENCE_LEN, ',d') if MAX_SEQUENCE_LEN is not None else None,
+                format(MAX_WORDS, ',d') if MAX_WORDS is not None else None
+                )
+    # ↳ Work around the TypeError when one of the values is *None*.
     tokenizer = Tokenizer(num_words=MAX_WORDS)
     # Build the word index
     tokenizer.fit_on_texts(processed_merged_tweets_trainval)
@@ -142,9 +145,6 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     logger.info('Shape of label (y) tensor = {training: %s | validation: %s | test: %s}',
                 y_train.shape, y_val.shape, y_test.shape)
 
-    # TODO: What should the value of MAX_SEQUENCE_LEN be?
-    #   - Required in the Embedding layer. Inconsistency between test set and train+val set in pad_sequences.
-
     # TODO: GloVe: why did it fail?
 
     return x_train, x_val, x_test, y_train, y_val, y_test, word_index
@@ -159,10 +159,12 @@ def load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     - Vectorize (tokenize) the raw text
     """
 
+    LABELS_XML_PATH = 'data/Advanced Symbolics/Labels.xml'
+    TWEETS_XMLS_DIR = 'data/Advanced Symbolics/Tweets'
+
     # Load the raw texts and the labels from the files into lists
     user_ids, processed_merged_tweets, text_genders, text_ages =\
-        datasets.asi.load('data/Advanced Symbolics/Labels.xml',
-                          'data/Advanced Symbolics/Tweets', stratified_subset='genders')
+        datasets.asi.load(LABELS_XML_PATH, TWEETS_XMLS_DIR, stratified_subset='genders')
 
     # Map textual gender labels to numeric labels:
     # 'female' → 0 and 'male' → 1
