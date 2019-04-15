@@ -188,6 +188,8 @@ def load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN):
         lowercased, etc.)
     - Split the dataset into balanced (stratified) training (60%), validation (20%), and test (20%) sets
     - Vectorize (tokenize) the raw text
+
+    Also, load and vectorize the test set of the PAN 2018 Author Profiling dataset as a second test set.
     """
 
     LABELS_XML_PATH = 'data/Advanced Symbolics/Labels.xml'
@@ -223,20 +225,34 @@ def load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN):
      tokenizer, word_index) = _vectorize_split_trainval(processed_merged_tweets_trainval, gender_labels_trainval,
                                                         user_ids_trainval, MAX_WORDS, MAX_SEQUENCE_LEN)
 
-    # Vectorize (tokenize) the test set raw text
+    # Vectorize (tokenize) the ASI test set raw text
     # Note that the tokenizer is already fit on the training+validation set
-    sequences_test = tokenizer.texts_to_sequences(processed_merged_tweets_test)
-    logger.info('@ %.2f seconds: Finished tokenizing the test set raw texts', time.process_time())
+    sequences_test_asi = tokenizer.texts_to_sequences(processed_merged_tweets_test)
+    logger.info('@ %.2f seconds: Finished tokenizing the ASI test set raw texts', time.process_time())
     #
-    x_test = pad_sequences(sequences_test, maxlen=MAX_SEQUENCE_LEN)
-    y_test = np.asarray(gender_labels_test)
+    x_test_asi = pad_sequences(sequences_test_asi, maxlen=MAX_SEQUENCE_LEN)
+    y_test_asi = np.asarray(gender_labels_test)
 
-    logger.info('Shape of data  (x) tensor = {training: %s | validation: %s | test: %s}',
-                x_train.shape, x_val.shape, x_test.shape)
-    logger.info('Shape of label (y) tensor = {training: %s | validation: %s | test: %s}',
-                y_train.shape, y_val.shape, y_test.shape)
+    # Load the PAN test set to use as a second test set for the gender experiments
+    # Load and pre-process the PAN 2018 English dataset and split 20% for test (only keep the test set)
+    (_ignored1, pan18ap_processed_merged_tweets_test,_ignored2,
+     pan18ap_labels_test, _ignored3, _ignored4) = _load_split_pan18ap()
 
-    return x_train, x_val, x_test, y_train, y_val, y_test, word_index
+    # Vectorize (tokenize) the PAN18AP test set raw text
+    # Note that the tokenizer is already fit on the training+validation set
+    sequences_test_pan18ap = tokenizer.texts_to_sequences(pan18ap_processed_merged_tweets_test)
+    logger.info('@ %.2f seconds: Finished tokenizing the PAN 2018 Author Profiling test set raw texts',
+                time.process_time())
+    #
+    x_test_pan18ap = pad_sequences(sequences_test_pan18ap, maxlen=MAX_SEQUENCE_LEN)
+    y_test_pan18ap = np.asarray(pan18ap_labels_test)
+
+    logger.info('Shape of data  (x) tensor = {training: %s | validation: %s | test_asi: %s | test_pan18ap: %s}',
+                x_train.shape, x_val.shape, x_test_asi.shape, x_test_pan18ap.shape)
+    logger.info('Shape of label (y) tensor = {training: %s | validation: %s | test_asi: %s | test_pan18ap: %s}',
+                y_train.shape, y_val.shape, y_test_asi.shape, y_test_pan18ap.shape)
+
+    return x_train, x_val, x_test_asi, x_test_pan18ap, y_train, y_val, y_test_asi, y_test_pan18ap, word_index
 
 
 def prepare_glove_embeddings(MAX_WORDS, EMBEDDING_DIM, word_index):
@@ -359,11 +375,12 @@ def log_plot_training_performance(history, PLOT=True):
         plt.show()
 
 
-def evaluate_model_on_test_set(model, x_test, y_test):
+def evaluate_model_on_test_set(model, x_test, y_test, TEST_SET_LABEL=''):
     """Evaluate the model (already trained) on the test set"""
 
     metrics_values = model.evaluate(x_test, y_test)
-    logger.info('@ %.2f seconds: Finished evaluating the model on the test set', time.process_time())
+    logger.info('@ %.2f seconds: Finished evaluating the model on the %s test set',
+                time.process_time(), TEST_SET_LABEL)
     for name, value in zip(model.metrics_names, metrics_values):
         logger.info("%s = %s", name, value)
 
@@ -389,8 +406,9 @@ def main():
     # (x_train, x_val, x_test,
     #  y_train, y_val, y_test, word_index) = load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN)
 
-    (x_train, x_val, x_test,
-     y_train, y_val, y_test, word_index) = load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN)
+    (x_train, x_val, x_test_asi, x_test_pan18ap,
+     y_train, y_val, y_test_asi, y_test_pan18ap,
+     word_index) = load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN)
 
     # trained_model, history = def_train_model.bidirectional_rnn(
     #     x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
@@ -400,7 +418,12 @@ def main():
     serialize_model_and_history(trained_model, history)
     log_plot_training_performance(history, PLOT=False)  # Note: Cannot plot on Compute Canada nodes.
 
-    evaluate_model_on_test_set(trained_model, x_test, y_test)
+    # evaluate_model_on_test_set(trained_model, x_test, y_test)
+
+    evaluate_model_on_test_set(trained_model, x_test_asi, y_test_asi,
+                               TEST_SET_LABEL='ASI')
+    evaluate_model_on_test_set(trained_model, x_test_pan18ap, y_test_pan18ap,
+                               TEST_SET_LABEL='PAN 2018 Author Profiling')
 
     # Destroy the current TF graph and create a new one, to ensure reproducible results.
     # This is also useful to avoid clutter from old models/layers.
