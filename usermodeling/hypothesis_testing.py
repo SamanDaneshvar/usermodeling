@@ -31,14 +31,14 @@ def legacy_func():
     #     temp_list.append(item - 0.02)
     # results[experiment_names[0]] = temp_list
     #
-    # experiment_names = ('Word and char n-grams, No LSA (English)', 'Word n-grams, No LSA (English)')
-    # results[experiment_names[0]] = [0.8, 0.79444444, 0.82222222, 0.87222222, 0.76111111, 0.85, 0.82222222, 0.85555556, 0.81111111, 0.81111111]
-    # results[experiment_names[1]] = [0.8, 0.78333333, 0.81111111, 0.85, 0.77222222, 0.81666667, 0.80555556, 0.82777778, 0.8, 0.8]
+    experiment_names = ('Word and char n-grams, No LSA (English)', 'Word n-grams, No LSA (English)')
+    results[experiment_names[0]] = [0.8, 0.79444444, 0.82222222, 0.87222222, 0.76111111, 0.85, 0.82222222, 0.85555556, 0.81111111, 0.81111111]
+    results[experiment_names[1]] = [0.8, 0.78333333, 0.81111111, 0.85, 0.77222222, 0.81666667, 0.80555556, 0.82777778, 0.8, 0.8]
 
 
-    experiment_names = ('Word and char n-grams, No LSA (Arabic)', 'Char n-grams, No LSA (Arabic)')
-    results[experiment_names[0]] = [0.83333333, 0.77777778, 0.81111111, 0.76666667, 0.81111111, 0.87777778, 0.81111111, 0.77777778, 0.81111111, 0.75555556]
-    results[experiment_names[1]] = [0.77777778, 0.75555556, 0.83333333, 0.74444444, 0.78888889, 0.82222222, 0.82222222, 0.75555556, 0.77777778, 0.71111111]
+    # experiment_names = ('Word and char n-grams, No LSA (Arabic)', 'Char n-grams, No LSA (Arabic)')
+    # results[experiment_names[0]] = [0.83333333, 0.77777778, 0.81111111, 0.76666667, 0.81111111, 0.87777778, 0.81111111, 0.77777778, 0.81111111, 0.75555556]
+    # results[experiment_names[1]] = [0.77777778, 0.75555556, 0.83333333, 0.74444444, 0.78888889, 0.82222222, 0.82222222, 0.75555556, 0.77777778, 0.71111111]
 
     # Descriptive stats
     print(results.describe())
@@ -164,10 +164,10 @@ if __name__ == '__main__':
     my_utils.set_working_directory(1)
     # legacy_func()
 
-    # plot_training_performance_from_pickle('2019-04-09_21-22-52 deep_learning __ ASI, 22k users, maxlen=2,644',
-    #                                       mode='compute canada')
-    # plot_training_performance_from_pickle('2019-04-10_01-23-46 deep_learning __ ASI, 22k users, maxlen=20k',
-    #                                       mode='compute canada')
-    plot_training_performance_from_pickle('2019-04-12_18-06-59')
+    plot_training_performance_from_pickle('2019-04-12_18-44-51 deep_learning __ ASI, basic fully connected model, maxlen=20k',
+                                          mode='compute canada')
+    plot_training_performance_from_pickle('2019-04-12_18-07-33 deep_learning __ ASI, basic fully connected model, maxlen=2,644',
+                                          mode='compute canada')
+    # plot_training_performance_from_pickle('2019-04-12_18-06-59')
 
     plt.show()

@@ -29,7 +29,7 @@ def load(labels_xml_path, tweets_xmls_dir, stratified_subset=None):
 
     user_ids, genders, ages = _load_labels(labels_xml_path)
 
-    # TODO: TEMP (for quick debug)
+    # # TODO: TEMP (for quick debug)
     # user_ids = user_ids[:100]
     # genders = genders[:100]
     # ages = ages[:100]
