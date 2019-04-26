@@ -178,6 +178,37 @@ def bidirectional_rnn(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LE
     return model, history
 
 
+def bidirectional_rnn_with_dropout(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
+    """Define and train a bidirectional RNN (LSTM/GRU) model with dropout"""
+
+    EMBEDDING_DIM = 32
+
+    # • Define the model
+    model = Sequential()
+    # Embedding layer
+    model.add(Embedding(MAX_WORDS, EMBEDDING_DIM))
+    model.add(Bidirectional(LSTM(32,
+                                 dropout=0.2,
+                                 recurrent_dropout=0.2)))
+    model.add(Dense(1, activation='sigmoid'))
+    model.summary(print_fn=logger.info)
+
+    # Compile and train the model (and evaluate it on the validation set)
+    model.compile(optimizer='rmsprop',
+                  loss='binary_crossentropy',
+                  metrics=['acc'],
+                  )
+    history = model.fit(x_train, y_train,
+                        epochs=40,
+                        batch_size=128,
+                        validation_data=(x_val, y_val),
+                        )
+
+    logger.info('@ %.2f seconds: Finished training and validation', time.process_time())
+
+    return model, history
+
+
 '''
 The following lines will be executed any time this .py file is run as a script or imported as a module.
 '''
