@@ -158,6 +158,10 @@ def plot_training_performance_from_pickle(run_timestamp_and_title, mode=None):
     ax1.set_ylim(y1[0] - y1_margin, y1[1] + y1_margin)
     ax2.set_ylim(y2[0] - y2_margin, y2[1] + y2_margin)
 
+    # Set limits of the x axis for both subplots
+    ax1.set_xlim(0, 40)
+    ax2.set_xlim(0, 40)
+
     figure.suptitle(run_timestamp_and_title + '\n' + 'Accuracy and loss for the training and validation')
 
 
@@ -184,9 +188,12 @@ if __name__ == '__main__':
     plot_training_performance_from_pickle('2019-04-25_21-49-49 deep_learning __ ASI, fully connected + dropout + L2 regularization')
     plot_training_performance_from_pickle('2019-04-25_22-48-58 deep_learning __ ASI, fully connected + dropout + L2 regularization = 0.01')
     plot_training_performance_from_pickle('2019-04-25_23-35-05 deep_learning __”, 40 epochs')
+    plot_training_performance_from_pickle('2019-03-30_00-59-55 deep_learning __ bidirectional LSTM, ASI')
     # plot_training_performance_from_pickle('2019-04-26_03-34-39 deep_learning __ ”, max_words=10^5')
     # plot_training_performance_from_pickle('2019-04-25_21-19-28 deep_learning __ ASI, fully connected + dropout + L2 regularization = 0.01, maxlen=20k',
     #                                       mode='compute canada')
     # plot_training_performance_from_pickle('2019-04-26_00-39-31 deep_learning __ ”, max_words=10^5',
+    #                                       mode='compute canada')
+    # plot_training_performance_from_pickle('2019-04-26_11-24-49 deep_learning __ max_words=10^4, maxlen=2,644. embedding_dim=100',
     #                                       mode='compute canada')
     plt.show()

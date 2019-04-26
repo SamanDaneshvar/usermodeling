@@ -413,10 +413,10 @@ def main():
      y_train, y_val, y_test_asi, y_test_pan18ap,
      word_index) = load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN)
 
-    # trained_model, history = def_train_model.bidirectional_rnn(
-    #     x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
-    trained_model, history = def_train_model.fully_connected_with_dropout_l2(
+    trained_model, history = def_train_model.bidirectional_rnn_with_dropout(
         x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
+    # trained_model, history = def_train_model.fully_connected_with_dropout_l2(
+    #     x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
 
     serialize_model_and_history(trained_model, history)
     log_plot_training_performance(history, PLOT=False)  # Note: Cannot plot on Compute Canada nodes.
