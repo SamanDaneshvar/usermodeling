@@ -183,6 +183,8 @@ if __name__ == '__main__':
     # plot_training_performance_from_pickle('2019-04-25_21-20-31 deep_learning __ ASI, fully connected + 2 dropouts')
     plot_training_performance_from_pickle('2019-04-25_21-49-49 deep_learning __ ASI, fully connected + dropout + L2 regularization')
     plot_training_performance_from_pickle('2019-04-25_22-48-58 deep_learning __ ASI, fully connected + dropout + L2 regularization = 0.01')
-    plot_training_performance_from_pickle('2019-04-25_23-35-05 deep_learning')
+    plot_training_performance_from_pickle('2019-04-25_23-35-05 deep_learning __”, 40 epochs')
+    # plot_training_performance_from_pickle('2019-04-25_21-19-28 deep_learning __ ASI, fully connected + dropout + L2 regularization = 0.01, maxlen=20k',
+    #                                       mode='compute canada')
 
     plt.show()

@@ -400,7 +400,7 @@ def main():
     ensure_reproducibility()
 
     # Size of the vocabulary—Consider only the 10,000 most frequent words in the dataset as features
-    MAX_WORDS = 10 ** 4
+    MAX_WORDS = 10 ** 5  # TODO: TEMP
     # Length of sequences—Cut off the text after this many words (among the *MAX_WORDS* most common words)
     # Can be passed as *None* to the tokenizer, but not to the embedding layer when you are going to connect
     # Flatten and Dense layers upstream. More info: https://keras.io/layers/embeddings/
