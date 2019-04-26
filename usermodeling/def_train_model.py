@@ -64,7 +64,7 @@ def basic_fully_connected(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENC
 def fully_connected_with_dropout_l2(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
     """Define and train a fully connected model with word embeddings, dropout, and L2 weight regularization"""
 
-    EMBEDDING_DIM = 8
+    EMBEDDING_DIM = 100  # TODO: TEMP
 
     # • Define the model
     model = Sequential()

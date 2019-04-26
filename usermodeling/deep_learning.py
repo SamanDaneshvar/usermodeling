@@ -400,11 +400,11 @@ def main():
     ensure_reproducibility()
 
     # Size of the vocabulary—Consider only the 10,000 most frequent words in the dataset as features
-    MAX_WORDS = 10 ** 5  # TODO: TEMP
+    MAX_WORDS = 10 ** 4
     # Length of sequences—Cut off the text after this many words (among the *MAX_WORDS* most common words)
     # Can be passed as *None* to the tokenizer, but not to the embedding layer when you are going to connect
     # Flatten and Dense layers upstream. More info: https://keras.io/layers/embeddings/
-    MAX_SEQUENCE_LEN = 20 * 1000  # 2644
+    MAX_SEQUENCE_LEN = 2644  # 20 * 1000
 
     # (x_train, x_val, x_test,
     #  y_train, y_val, y_test, word_index) = load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN)

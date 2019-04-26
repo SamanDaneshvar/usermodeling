@@ -85,7 +85,7 @@ def legacy_func():
         print("No significant difference between the means: Samples are likely drawn from the same distribution")
 
 
-def plot_training_performance_from_pickle(run_timestamp, mode=None):
+def plot_training_performance_from_pickle(run_timestamp_and_title, mode=None):
     """Load a pickled *history.history* dictionary and plot its information
 
     This function gets a timestamp string as input and loads its corresponding pickled *history.history* dictionary.
@@ -105,7 +105,7 @@ def plot_training_performance_from_pickle(run_timestamp, mode=None):
     """
 
     # In case the input character contains other characters after the timestring, trim the rest of it
-    run_timestamp = run_timestamp.split()[0]
+    run_timestamp = run_timestamp_and_title.split()[0]
 
     if mode == 'compute canada':
         PICKLES_DIR = 'data/out/. Compute Canada/pickles'
@@ -158,7 +158,7 @@ def plot_training_performance_from_pickle(run_timestamp, mode=None):
     ax1.set_ylim(y1[0] - y1_margin, y1[1] + y1_margin)
     ax2.set_ylim(y2[0] - y2_margin, y2[1] + y2_margin)
 
-    figure.suptitle(run_timestamp + '\n' + 'Accuracy and loss for the training and validation')
+    figure.suptitle(run_timestamp_and_title + '\n' + 'Accuracy and loss for the training and validation')
 
 
 ''' 
@@ -184,7 +184,9 @@ if __name__ == '__main__':
     plot_training_performance_from_pickle('2019-04-25_21-49-49 deep_learning __ ASI, fully connected + dropout + L2 regularization')
     plot_training_performance_from_pickle('2019-04-25_22-48-58 deep_learning __ ASI, fully connected + dropout + L2 regularization = 0.01')
     plot_training_performance_from_pickle('2019-04-25_23-35-05 deep_learning __”, 40 epochs')
+    # plot_training_performance_from_pickle('2019-04-26_03-34-39 deep_learning __ ”, max_words=10^5')
     # plot_training_performance_from_pickle('2019-04-25_21-19-28 deep_learning __ ASI, fully connected + dropout + L2 regularization = 0.01, maxlen=20k',
     #                                       mode='compute canada')
-
+    # plot_training_performance_from_pickle('2019-04-26_00-39-31 deep_learning __ ”, max_words=10^5',
+    #                                       mode='compute canada')
     plt.show()
