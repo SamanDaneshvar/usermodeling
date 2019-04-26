@@ -415,7 +415,7 @@ def main():
 
     # trained_model, history = def_train_model.bidirectional_rnn(
     #     x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
-    trained_model, history = def_train_model.basic_fully_connected(
+    trained_model, history = def_train_model.fully_connected_with_dropout_l2(
         x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
 
     serialize_model_and_history(trained_model, history)
