@@ -88,7 +88,7 @@ def fully_connected_with_dropout_l2(x_train, x_val, y_train, y_val, MAX_WORDS, M
     model.add(Dropout(0.5))
     #
     model.add(Dense(32,
-                    kernel_regularizer=regularizers.l2(10 ** -3),
+                    kernel_regularizer=regularizers.l2(10 ** -2),
                     activation='relu'))
     # Dropout layer 2
     model.add(Dropout(0.5))
@@ -109,7 +109,7 @@ def fully_connected_with_dropout_l2(x_train, x_val, y_train, y_val, MAX_WORDS, M
                   metrics=['acc'],
                   )
     history = model.fit(x_train, y_train,
-                        epochs=10,
+                        epochs=40,
                         batch_size=32,
                         validation_data=(x_val, y_val),
                         )

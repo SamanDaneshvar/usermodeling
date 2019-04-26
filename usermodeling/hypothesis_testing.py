@@ -149,6 +149,15 @@ def plot_training_performance_from_pickle(run_timestamp, mode=None):
     ax2.set_xlabel('epoch')
     ax2.legend()
 
+    # Set limits of the y axis for both subplots
+    y1 = (0, 1)
+    y2 = (0, 2.5)
+    #
+    y1_margin = 0.05 * (y1[1] - y1[0])
+    y2_margin = 0.05 * (y2[1] - y2[0])
+    ax1.set_ylim(y1[0] - y1_margin, y1[1] + y1_margin)
+    ax2.set_ylim(y2[0] - y2_margin, y2[1] + y2_margin)
+
     figure.suptitle(run_timestamp + '\n' + 'Accuracy and loss for the training and validation')
 
 
@@ -164,10 +173,16 @@ if __name__ == '__main__':
     my_utils.set_working_directory(1)
     # legacy_func()
 
-    plot_training_performance_from_pickle('2019-04-12_18-44-51 deep_learning __ ASI, basic fully connected model, maxlen=20k',
-                                          mode='compute canada')
-    plot_training_performance_from_pickle('2019-04-12_18-07-33 deep_learning __ ASI, basic fully connected model, maxlen=2,644',
-                                          mode='compute canada')
-    # plot_training_performance_from_pickle('2019-04-12_18-06-59')
+    # plot_training_performance_from_pickle('2019-04-12_18-44-51 deep_learning __ ASI, basic fully connected model, maxlen=20k',
+    #                                       mode='compute canada')
+    # plot_training_performance_from_pickle('2019-04-12_18-07-33 deep_learning __ ASI, basic fully connected model, maxlen=2,644',
+    #                                       mode='compute canada')
+
+    # plot_training_performance_from_pickle('2019-04-12_18-06-59 deep_learning __ ASI, basic fully connected model')
+    # plot_training_performance_from_pickle('2019-04-25_20-48-32 deep_learning __ ASI, fully connected + dropout')
+    # plot_training_performance_from_pickle('2019-04-25_21-20-31 deep_learning __ ASI, fully connected + 2 dropouts')
+    plot_training_performance_from_pickle('2019-04-25_21-49-49 deep_learning __ ASI, fully connected + dropout + L2 regularization')
+    plot_training_performance_from_pickle('2019-04-25_22-48-58 deep_learning __ ASI, fully connected + dropout + L2 regularization = 0.01')
+    plot_training_performance_from_pickle('2019-04-25_23-35-05 deep_learning')
 
     plt.show()
