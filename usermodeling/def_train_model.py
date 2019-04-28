@@ -188,8 +188,9 @@ def bidirectional_rnn_with_dropout(x_train, x_val, y_train, y_val, MAX_WORDS, MA
     # Embedding layer
     model.add(Embedding(MAX_WORDS, EMBEDDING_DIM))
     model.add(Bidirectional(LSTM(32,
-                                 dropout=0.2,
-                                 recurrent_dropout=0.2)))
+                                 activation='relu',
+                                 dropout=0.1,
+                                 recurrent_dropout=0.1)))
     model.add(Dense(1, activation='sigmoid'))
     model.summary(print_fn=logger.info)
 
@@ -199,7 +200,7 @@ def bidirectional_rnn_with_dropout(x_train, x_val, y_train, y_val, MAX_WORDS, MA
                   metrics=['acc'],
                   )
     history = model.fit(x_train, y_train,
-                        epochs=40,
+                        epochs=20,
                         batch_size=128,
                         validation_data=(x_val, y_val),
                         )
@@ -236,7 +237,7 @@ def stacked_bidirectional_rnn_with_dropout(x_train, x_val, y_train, y_val, MAX_W
                   metrics=['acc'],
                   )
     history = model.fit(x_train, y_train,
-                        epochs=40,
+                        epochs=20,
                         batch_size=128,
                         validation_data=(x_val, y_val),
                         )

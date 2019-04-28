@@ -394,7 +394,8 @@ def main():
     Every time the script runs, it will call this function.
     """
 
-    logger.info('Experiment notes: --')
+    logger.info('Experiment notes: --> ” (CC/2019-04-26_16-03-39) recurrent dropout = 0.1. Changed activation of bi-LSTM layer to relu (from tanh). Trained for 20 epochs')
+    # logger.info('Experiment notes: --> Added a second bidirectional LSTM layer. recurrent dropout = 0.1 and activation = relu for both LSTM layers. 32 units in the first one and 64 in the second. Trained for 20 epochs')
 
     # Ensure reproducible results
     ensure_reproducibility()
