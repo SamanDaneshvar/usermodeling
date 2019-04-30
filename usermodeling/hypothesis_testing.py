@@ -166,7 +166,7 @@ def plot_training_performance_from_pickle(run_timestamp_and_title, mode=None):
     ax1.set_xlim(xx)
     ax2.set_xlim(xx)
 
-    # figure.suptitle(run_timestamp_and_title + '\n' + 'Accuracy and loss for the training and validation')
+    figure.suptitle(run_timestamp_and_title + '\n' + 'Accuracy and loss for the training and validation')
 
 
 ''' 
@@ -204,9 +204,10 @@ if __name__ == '__main__':
     # plot_training_performance_from_pickle('2019-04-26_11-24-49 deep_learning __ max_words=10^4, maxlen=2,644. embedding_dim=100',
     #                                       mode='compute canada')
 
-    plot_training_performance_from_pickle('2019-04-09_21-22-52 deep_learning __ ASI, 22k users, maxlen=2,644',
+    # plot_training_performance_from_pickle('2019-04-09_21-22-52 deep_learning __ ASI, 22k users, maxlen=2,644',
+    #                                       mode='compute canada')
+    # plot_training_performance_from_pickle('2019-03-30_00-59-55 deep_learning __ bidirectional LSTM, ASI')
+    plot_training_performance_from_pickle('2019-04-26_16-03-39 deep_learning __ Bidirectional LSTM + dropout=0.2',
                                           mode='compute canada')
-    plot_training_performance_from_pickle('2019-03-30_00-59-55 deep_learning __ bidirectional LSTM, ASI')
-    plot_training_performance_from_pickle('2019-04-26_16-03-39 deep_learning __ Bidirectional LSTM + dropout',
-                                          mode='compute canada')
+    plot_training_performance_from_pickle('2019-04-28_22-27-52 deep_learning __ Bidirectional LSTM + dropout=0.1')
     plt.show()
