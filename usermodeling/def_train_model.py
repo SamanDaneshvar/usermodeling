@@ -69,18 +69,6 @@ def fully_connected_with_dropout_l2(x_train, x_val, y_train, y_val, MAX_WORDS, M
     # • Define the model
     model = Sequential()
     # Embedding layer
-    '''
-    After the Embedding layer, the  activations have shape (samples, MAX_SEQUENCE_LEN, EMBEDDING_DIM)
-
-    Arguments:
-        input_dim = MAX_WORDS:           Size of the vocabulary
-        output_dim = EMBEDDING_DIM:      Dimension of the dense embedding
-        input_length = MAX_SEQUENCE_LEN: Length of input sequences, when it is constant
-
-    Shape of input and output:
-        Input:    2D tensor with shape (batch_size, input_length)
-        Output:   3D tensor with shape (batch_size, input_length, output_dim)
-    '''
     model.add(Embedding(MAX_WORDS, EMBEDDING_DIM, input_length=MAX_SEQUENCE_LEN))
     # Flatten the 3D tensor of embeddings into a 2D tensor of shape (samples, MAX_SEQUENCE_LEN * EMBEDDING_DIM)
     model.add(Flatten())
@@ -209,8 +197,8 @@ def bidirectional_rnn_with_dropout(x_train, x_val, y_train, y_val, MAX_WORDS, MA
     return model, history
 
 
-def stacked_bidirectional_rnn_with_dropout(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
-    """Define and train a stacked bidirectional RNN (LSTM/GRU) model with dropout"""
+def stacked_bidirectional_rnn_with_dropout_l2(x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index):
+    """Define and train a stacked bidirectional RNN (LSTM/GRU) model with dropout and L2 regularization"""
 
     EMBEDDING_DIM = 32
 
@@ -221,11 +209,16 @@ def stacked_bidirectional_rnn_with_dropout(x_train, x_val, y_train, y_val, MAX_W
     model.add(Bidirectional(LSTM(32,
                                  dropout=0.1,
                                  recurrent_dropout=0.1,
+                                 kernel_regularizer=regularizers.l2(10 ** -2),
+                                 recurrent_regularizer=regularizers.l2(10 ** -2),
                                  return_sequences=True)))
     model.add(Bidirectional(LSTM(64,
                                  activation='tanh',
                                  dropout=0.1,
-                                 recurrent_dropout=0.1)))
+                                 recurrent_dropout=0.1,
+                                 kernel_regularizer=regularizers.l2(10 ** -2),
+                                 recurrent_regularizer=regularizers.l2(10 ** -2),
+                                 )))
     model.add(Dense(1, activation='sigmoid'))
     model.summary(print_fn=logger.info)
 
