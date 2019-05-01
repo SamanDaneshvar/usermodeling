@@ -394,7 +394,7 @@ def main():
     Every time the script runs, it will call this function.
     """
 
-    logger.info('Experiment notes: --> Added a second bidirectional LSTM layer with tanh activation. recurrent dropout = 0.1. 32 units in the first LSTM layer and 64 in the second. Trained for 20 epochs')
+    logger.info('Experiment notes: --> 2 bidirectional LSTM layers + dropout=0.1 + input & recurrent L2 regularization = 0.01')
 
     # Ensure reproducible results
     ensure_reproducibility()
@@ -413,7 +413,7 @@ def main():
      y_train, y_val, y_test_asi, y_test_pan18ap,
      word_index) = load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN)
 
-    trained_model, history = def_train_model.stacked_bidirectional_rnn_with_dropout(
+    trained_model, history = def_train_model.stacked_bidirectional_rnn_with_dropout_l2(
         x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
     # trained_model, history = def_train_model.fully_connected_with_dropout_l2(
     #     x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)

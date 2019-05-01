@@ -150,8 +150,8 @@ def plot_training_performance_from_pickle(run_timestamp_and_title, mode=None):
     ax2.legend()
 
     # Set limits of the y axis for both subplots
-    y1 = (0, 1)
-    y2 = (0, 3)
+    y1 = (0.5, 1)
+    y2 = (0, 1.5)
     #
     y1_margin = 0.05 * (y1[1] - y1[0])
     y2_margin = 0.05 * (y2[1] - y2[0])
@@ -159,7 +159,7 @@ def plot_training_performance_from_pickle(run_timestamp_and_title, mode=None):
     ax2.set_ylim(y2[0] - y2_margin, y2[1] + y2_margin)
 
     # Set limits of the x axis for both subplots
-    x = (1, 40)
+    x = (1, 20)
     #
     x_margin = 0.05 * (x[1] - x[0])
     xx = (x[0] - x_margin, x[1] + x_margin)
@@ -207,7 +207,10 @@ if __name__ == '__main__':
     # plot_training_performance_from_pickle('2019-04-09_21-22-52 deep_learning __ ASI, 22k users, maxlen=2,644',
     #                                       mode='compute canada')
     # plot_training_performance_from_pickle('2019-03-30_00-59-55 deep_learning __ bidirectional LSTM, ASI')
-    plot_training_performance_from_pickle('2019-04-26_16-03-39 deep_learning __ Bidirectional LSTM + dropout=0.2',
-                                          mode='compute canada')
+    # plot_training_performance_from_pickle('2019-04-26_16-03-39 deep_learning __ Bidirectional LSTM + dropout=0.2',
+    #                                       mode='compute canada')
     plot_training_performance_from_pickle('2019-04-28_22-27-52 deep_learning __ Bidirectional LSTM + dropout=0.1')
+
+    plot_training_performance_from_pickle('2019-04-29_16-31-28 deep_learning __ %%%')
+    # plot_training_performance_from_pickle('2019-04-30_05-20-56 deep_learning __ CCCCC', mode='compute canada')
     plt.show()
