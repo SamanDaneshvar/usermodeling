@@ -209,15 +209,15 @@ def stacked_bidirectional_rnn_with_dropout_l2(x_train, x_val, y_train, y_val, MA
     model.add(Bidirectional(LSTM(32,
                                  dropout=0.1,
                                  recurrent_dropout=0.1,
-                                 kernel_regularizer=regularizers.l2(10 ** -2),
-                                 recurrent_regularizer=regularizers.l2(10 ** -2),
+                                 kernel_regularizer=regularizers.l2(10 ** -3),
+                                 recurrent_regularizer=regularizers.l2(10 ** -3),
                                  return_sequences=True)))
     model.add(Bidirectional(LSTM(64,
                                  activation='tanh',
                                  dropout=0.1,
                                  recurrent_dropout=0.1,
-                                 kernel_regularizer=regularizers.l2(10 ** -2),
-                                 recurrent_regularizer=regularizers.l2(10 ** -2),
+                                 kernel_regularizer=regularizers.l2(10 ** -3),
+                                 recurrent_regularizer=regularizers.l2(10 ** -3),
                                  )))
     model.add(Dense(1, activation='sigmoid'))
     model.summary(print_fn=logger.info)

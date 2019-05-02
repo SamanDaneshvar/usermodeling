@@ -394,7 +394,7 @@ def main():
     Every time the script runs, it will call this function.
     """
 
-    logger.info('Experiment notes: --> 2 bidirectional LSTM layers + dropout=0.1 + input & recurrent L2 regularization = 0.01')
+    logger.info('Experiment notes: --> 2 bidirectional LSTM layers + dropout=0.1 + input & recurrent L2 regularization = 0.001')
 
     # Ensure reproducible results
     ensure_reproducibility()
