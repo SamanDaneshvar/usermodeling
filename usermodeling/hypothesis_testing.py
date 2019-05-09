@@ -7,6 +7,7 @@ import pickle
 
 from matplotlib import pyplot as plt
 from pandas import DataFrame
+import pyperclip as clipboard
 from scipy.stats import normaltest
 from scipy.stats import ttest_ind
 
@@ -185,6 +186,32 @@ def plot_training_performance_from_pickle(run_timestamp_and_title, mode=None):
     figure.suptitle(run_timestamp_and_title + '\n' + 'Accuracy and loss for the training and validation')
 
 
+def history_to_tabular_string(run_timestamp_and_title, mode=None):
+    """Load a pickled *history.history* dictionary and return its information as a tabular text string
+
+    For information about the input arguments, refer to the docstring of the *unpickle_history()* function.
+    """
+
+    epochs, acc, val_acc, loss, val_loss = unpickle_history(run_timestamp_and_title, mode=mode)
+
+    header = ['Epoch', 'Training accuracy', 'Validation accuracy', 'Training loss', 'Validation loss']
+    rows = list(zip(epochs, acc, val_acc, loss, val_loss))
+
+    # Turn the header into a tabular string and add it to *lines* list
+    lines = ['\t'.join(header)]
+    # Turn all the other rows into tabular strings and add them to the *lines* list
+    lines.extend('\t'.join([str(item) for item in row]) for row in rows)
+    # Add the run timestamp and title to the *lines* list (to help match the output to the run)
+    lines.append(run_timestamp_and_title)
+    # Join all the lines into a single string
+    tabular_string = '\n'.join(lines)
+
+    # Copy the string to the clipboard (using the *pyperclip* package)
+    clipboard.copy(tabular_string)
+
+    logger.info('The tabular string was copied to the clipboard.')
+
+
 ''' 
 The following lines will be executed only if this .py file is run as a script,
 and not if it is imported as a module.
@@ -226,3 +253,5 @@ if __name__ == '__main__':
     # plot_training_performance_from_pickle('2019-05-01_21-35-41 deep_learning __ ”, + input & recurrent L2 regularization = 0.001', mode='compute canada')
     # plot_training_performance_from_pickle('2019-05-01_20-41-11 deep_learning __ ”, + input & recurrent L2 regularization = 0.01', mode='compute canada')
     # plt.show()
+
+    history_to_tabular_string('2019-04-12_18-06-59 deep_learning __ ASI, basic fully connected model')
