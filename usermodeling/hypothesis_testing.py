@@ -189,7 +189,15 @@ def plot_training_performance_from_pickle(run_timestamp_and_title, mode=None):
 def history_to_tabular_string(run_timestamp_and_title, mode=None):
     """Load a pickled *history.history* dictionary and return its information as a tabular text string
 
-    For information about the input arguments, refer to the docstring of the *unpickle_history()* function.
+    - The output text string is copied onto the system clipboard, and is in the following form:
+        Epoch	Training accuracy   Validation accuracy     Training loss   Validation loss
+        1       1.0                 1.0                     1.0             1.0
+        2       ...
+        ...
+        10      ...
+        *run_timestamp_and_title*
+    - The string is tabular, except the last line which is the run timestamp and title (the input of the function).
+    - For information about the input arguments, refer to the docstring of the *unpickle_history()* function.
     """
 
     epochs, acc, val_acc, loss, val_loss = unpickle_history(run_timestamp_and_title, mode=mode)
