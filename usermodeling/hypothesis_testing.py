@@ -85,23 +85,28 @@ def legacy_func():
         print("No significant difference between the means: Samples are likely drawn from the same distribution")
 
 
-def plot_training_performance_from_pickle(run_timestamp_and_title, mode=None):
-    """Load a pickled *history.history* dictionary and plot its information
+def unpickle_history(run_timestamp_and_title, mode=None):
+    """Load a pickled *history.history* dictionary and return its information as lists
 
-    This function gets a timestamp string as input and loads its corresponding pickled *history.history* dictionary.
-    The history object is returned by the *model.fit* method in Keras. The *history.history* dictionary is an attribute
-    of history which contains the performance of a model over time during training and validation.
-    The function will plot this information.
-
-    This is useful to review and compare the performance of the models in previous experiments.
+    - This function gets a timestamp string as input and loads its corresponding pickled *history.history* dictionary.
+    - The history object is returned by the *model.fit* method in Keras. The *history.history* dictionary is an
+    attribute of history which contains the performance of a model over time during training and validation.
+    - This is useful to review and compare the performance of the models in previous experiments.
 
     Args:
-        - run_timestamp: A string containing the date and time of the target run with the format '%Y-%m-%d_%H-%M-%S'.
-        This string can also contain other characters after the timestamp. As long as the string begins with a
-        timestamp in the above format, and there is some whitespace characters between the timestamp and the rest of
-        the string, the rest of the string will be trimmed and ignored.
+        - run_timestamp_and_title: A string containing the date and time of the target run with the format
+        '%Y-%m-%d_%H-%M-%S'. This string can also contain other characters after the timestamp. As long as the string
+        begins with a timestamp in the above format, and there is some whitespace characters between the timestamp
+        and the rest of the string, the rest of the string will be trimmed and ignored.
         - mode: If 'compute canada', some adjustments will be made to the pickles directory and the pickled file before
         unpickling, as a workaround to a bug in NumPy 1.16.0.
+
+    Returns:
+        epochs <range>: Epoch numbers
+        acc <list of float64>: Training accuracies
+        val_acc <list of float64>: Validation accuracies
+        loss <list of float64>: Training losses
+        val_loss <list of float64>: Validation losses
     """
 
     # In case the input character contains other characters after the timestring, trim the rest of it
@@ -134,6 +139,17 @@ def plot_training_performance_from_pickle(run_timestamp_and_title, mode=None):
     val_loss = history_dot_history['val_loss']
 
     epochs = range(1, len(acc) + 1)
+
+    return epochs, acc, val_acc, loss, val_loss
+
+
+def plot_training_performance_from_pickle(run_timestamp_and_title, mode=None):
+    """Load a pickled *history.history* dictionary and plot its information
+
+    For information about the input arguments, refer to the docstring of the *unpickle_history()* function.
+    """
+
+    epochs, acc, val_acc, loss, val_loss = unpickle_history(run_timestamp_and_title, mode=mode)
 
     # Create a figure with two subplots
     figure, (ax1, ax2) = plt.subplots(2, 1)
