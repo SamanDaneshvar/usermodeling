@@ -1,4 +1,7 @@
-"""Hypothesis testing and compare experiment results"""
+"""Hypothesis testing and compare experiment results
+
+This module includes some helper functions for browsing the experiment results in different ways.
+"""
 
 from io import BytesIO
 import logging
@@ -6,6 +9,7 @@ import os
 import pickle
 
 from matplotlib import pyplot as plt
+import numpy as np
 from pandas import DataFrame
 import pyperclip as clipboard
 from scipy.stats import normaltest
@@ -144,48 +148,6 @@ def unpickle_history(run_timestamp_and_title, mode=None):
     return epochs, acc, val_acc, loss, val_loss
 
 
-def plot_training_performance_from_pickle(run_timestamp_and_title, mode=None):
-    """Load a pickled *history.history* dictionary and plot its information
-
-    For information about the input arguments, refer to the docstring of the *unpickle_history()* function.
-    """
-
-    epochs, acc, val_acc, loss, val_loss = unpickle_history(run_timestamp_and_title, mode=mode)
-
-    # Create a figure with two subplots
-    figure, (ax1, ax2) = plt.subplots(2, 1)
-
-    ax1.plot(epochs, acc, '.:', label='Training accuracy')
-    ax1.plot(epochs, val_acc, 'o-', label='Validation accuracy')
-    ax1.set_ylabel('accuracy')
-    ax1.legend()
-
-    ax2.plot(epochs, loss, '.:', label='Training loss')
-    ax2.plot(epochs, val_loss, 'o-', label='Validation loss')
-    ax2.set_ylabel('loss')
-    ax2.set_xlabel('epoch')
-    ax2.legend()
-
-    # Set limits of the y axis for both subplots
-    y1 = (0, 1)
-    y2 = (0, 3)
-    #
-    y1_margin = 0.05 * (y1[1] - y1[0])
-    y2_margin = 0.05 * (y2[1] - y2[0])
-    ax1.set_ylim(y1[0] - y1_margin, y1[1] + y1_margin)
-    ax2.set_ylim(y2[0] - y2_margin, y2[1] + y2_margin)
-
-    # Set limits of the x axis for both subplots
-    x = (1, 10)
-    #
-    x_margin = 0.05 * (x[1] - x[0])
-    xx = (x[0] - x_margin, x[1] + x_margin)
-    ax1.set_xlim(xx)
-    ax2.set_xlim(xx)
-
-    figure.suptitle(run_timestamp_and_title + '\n' + 'Accuracy and loss for the training and validation')
-
-
 def history_to_tabular_string(run_timestamp_and_title, mode=None):
     """Load a pickled *history.history* dictionary and return its information as a tabular text string
 
@@ -218,6 +180,58 @@ def history_to_tabular_string(run_timestamp_and_title, mode=None):
     clipboard.copy(tabular_string)
 
     logger.info('The tabular string was copied to the clipboard.')
+
+
+def plot_training_performance_from_pickle(run_timestamp_and_title, mode=None):
+    """Load a pickled *history.history* dictionary and plot its information
+
+    For information about the input arguments, refer to the docstring of the *unpickle_history()* function.
+    """
+
+    epochs, acc, val_acc, loss, val_loss = unpickle_history(run_timestamp_and_title, mode=mode)
+
+    # Create a figure with two subplots
+    figure, (ax1, ax2) = plt.subplots(2, 1)
+
+    ax1.plot(epochs, acc, '.:', label='Training accuracy')
+    ax1.plot(epochs, val_acc, 'o-', label='Validation accuracy')
+    ax1.set_ylabel('accuracy')
+    ax1.legend()
+
+    ax2.plot(epochs, loss, '.:', label='Training loss')
+    ax2.plot(epochs, val_loss, 'o-', label='Validation loss')
+    ax2.set_ylabel('loss')
+    ax2.set_xlabel('epoch')
+    ax2.legend()
+
+    # Set limits of the y axis for both subplots
+    y1 = (0.5, 1)
+    y2 = (0, 1.5)
+    # TEMP: Set the tick intervals of the y axis to 0.1 for the first subplot
+    y1_interval = 0.1
+    y1ticks = np.arange(y1[0] - y1_interval, y1[1] + 2 * y1_interval, y1_interval)
+    ax1.set_yticks(y1ticks)
+    #
+    y1_margin = 0.05 * (y1[1] - y1[0])
+    y2_margin = 0.05 * (y2[1] - y2[0])
+    ax1.set_ylim(y1[0] - y1_margin, y1[1] + y1_margin)
+    ax2.set_ylim(y2[0] - y2_margin, y2[1] + y2_margin)
+
+    # Set limits of the x axis and its tick intervals for both subplots
+    x = (1, 20)
+    # Set the tick intervals of the x axis to 2
+    # This has to be done before setting the limits of the x axis. Otherwise, it will replace that information.
+    x_interval = 2
+    xticks = np.arange(0, x[1] + 2 * x_interval, x_interval)
+    ax1.set_xticks(xticks)
+    ax2.set_xticks(xticks)
+    # Set limits of the x axis for both subplots
+    x_margin = 0.05 * (x[1] - x[0])
+    xx = (x[0] - x_margin, x[1] + x_margin)
+    ax1.set_xlim(xx)
+    ax2.set_xlim(xx)
+
+    # figure.suptitle(run_timestamp_and_title + '\n' + 'Accuracy and loss for the training and validation')
 
 
 ''' 
