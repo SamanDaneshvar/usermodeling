@@ -97,7 +97,7 @@ def fully_connected_with_dropout_l2(x_train, x_val, y_train, y_val, MAX_WORDS, M
                   metrics=['acc'],
                   )
     history = model.fit(x_train, y_train,
-                        epochs=40,
+                        epochs=4,
                         batch_size=32,
                         validation_data=(x_val, y_val),
                         )

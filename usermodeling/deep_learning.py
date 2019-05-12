@@ -74,7 +74,7 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
 
     # Load and pre-process the PAN 2018 English dataset and split 20% for test
     (processed_merged_tweets_trainval, processed_merged_tweets_test,
-     labels_trainval, labels_test, author_ids_trainval, author_ids_test) = _load_split_pan18ap()
+     labels_trainval, labels_test, author_ids_trainval, author_ids_test) = _load_split_pan18ap_training_corpus()
 
     # Vectorize the training+validation raw text and split it into stratified training and validation sets
     (x_train, x_val, y_train, y_val,
@@ -99,10 +99,10 @@ def load_split_and_vectorize_pan18ap_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     return x_train, x_val, x_test, y_train, y_val, y_test, word_index
 
 
-def _load_split_pan18ap():
+def _load_split_pan18ap_training_corpus():
     """Load and pre-process the PAN 2018 English dataset and split 20% for test
 
-    - Load the English training dataset of the PAN 2018 Author Profiling task
+    - Load the English training corpus of the PAN 2018 Author Profiling task
     - Pre-process the raw text (replace URLs, etc.)
     - Split 20% of the raw dataset for test set (stratified)
     """
@@ -139,6 +139,42 @@ def _load_split_pan18ap():
 
     return (processed_merged_tweets_trainval, processed_merged_tweets_test,
             labels_trainval, labels_test, author_ids_trainval, author_ids_test)
+
+
+def _load_pan18ap_test_corpus():
+    """Load and pre-process the official test corpus of PAN 2018 (only English)
+
+    - Load the English test corpus of the PAN 2018 Author Profiling task
+    - Pre-process the raw text (replace URLs, etc.)
+
+    This is used as a second test set for experiments on the ASI dataset.
+    """
+
+    XMLS_DIRECTORY = 'data/PAN 2018, Author Profiling - Test Corpus/en/text'
+    TRUTH_PATH = 'data/PAN 2018, Author Profiling - Test Corpus/en/en.txt'
+
+    # Load the raw texts and the labels (truths) from the files into lists
+    merged_tweets, text_labels, author_ids, original_tweet_lengths = \
+        datasets.process_data_files.load_pan_data(XMLS_DIRECTORY, TRUTH_PATH)
+
+    # Map textual labels to numeric labels:
+    # 'female' → 0 and 'male' → 1
+    labels = []  # Create an empty list
+    for text_label in text_labels:
+        if text_label == 'female':
+            labels.append(0)
+        elif text_label == 'male':
+            labels.append(1)
+        else:
+            raise ValueError('The labels are expected to be "male" or "female". Encountered label "%s".' % text_label)
+
+    # Process the merged tweets using NLTK's tweet tokenizer to replace repeated characters,
+    # and remove URLs and @Username mentions
+    processed_merged_tweets = []  # Create an empty list
+    for merged_tweets_of_author in merged_tweets:
+        processed_merged_tweets.append(preprocess_tweet(merged_tweets_of_author, replacement_tags=False))
+
+    return processed_merged_tweets, labels, author_ids
 
 
 def _vectorize_split_trainval(processed_merged_tweets_trainval, labels_trainval, user_ids_trainval,
@@ -189,7 +225,7 @@ def load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     - Split the dataset into balanced (stratified) training (60%), validation (20%), and test (20%) sets
     - Vectorize (tokenize) the raw text
 
-    Also, load and vectorize the test set of the PAN 2018 Author Profiling dataset as a second test set.
+    Also, load and vectorize the official test set of the PAN 2018 Author Profiling dataset as a second test set.
     """
 
     LABELS_XML_PATH = 'data/Advanced Symbolics/Labels.xml'
@@ -210,7 +246,7 @@ def load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN):
         else:
             raise ValueError('The labels are expected to be "male" or "female". Encountered label "%s".' % text_label)
 
-    # TODO (later): Map textual age labels to numeric labels
+    # TODO (not for now): Map textual age labels to numeric labels
 
     # Split the raw dataset into balanced (stratified) training+validation and test sets (split 20% for test set)
     (processed_merged_tweets_trainval, processed_merged_tweets_test,
@@ -233,15 +269,14 @@ def load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN):
     x_test_asi = pad_sequences(sequences_test_asi, maxlen=MAX_SEQUENCE_LEN)
     y_test_asi = np.asarray(gender_labels_test)
 
-    # Load the PAN test set to use as a second test set for the gender experiments
-    # Load and pre-process the PAN 2018 English dataset and split 20% for test (only keep the test set)
-    (_ignored1, pan18ap_processed_merged_tweets_test,_ignored2,
-     pan18ap_labels_test, _ignored3, _ignored4) = _load_split_pan18ap()
+    # Load and preprocess PAN 2018's official test corpus (only English) to use as a second test set for
+    # the gender experiments
+    pan18ap_processed_merged_tweets_test, pan18ap_labels_test, _ignored1 = _load_pan18ap_test_corpus()
 
     # Vectorize (tokenize) the PAN18AP test set raw text
     # Note that the tokenizer is already fit on the training+validation set
     sequences_test_pan18ap = tokenizer.texts_to_sequences(pan18ap_processed_merged_tweets_test)
-    logger.info('@ %.2f seconds: Finished tokenizing the PAN18AP test set raw texts',
+    logger.info('@ %.2f seconds: Finished tokenizing the PAN18AP test set (official test corpus) raw texts',
                 time.process_time())
     #
     x_test_pan18ap = pad_sequences(sequences_test_pan18ap, maxlen=MAX_SEQUENCE_LEN)
@@ -394,7 +429,7 @@ def main():
     Every time the script runs, it will call this function.
     """
 
-    logger.info('Experiment notes: --> 2 bidirectional LSTM layers + dropout=0.1 + input & recurrent L2 regularization = 0.001')
+    logger.info('Experiment notes: --')
 
     # Ensure reproducible results
     ensure_reproducibility()
@@ -413,7 +448,7 @@ def main():
      y_train, y_val, y_test_asi, y_test_pan18ap,
      word_index) = load_split_and_vectorize_asi_data(MAX_WORDS, MAX_SEQUENCE_LEN)
 
-    trained_model, history = def_train_model.stacked_bidirectional_rnn_with_dropout_l2(
+    trained_model, history = def_train_model.fully_connected_with_dropout_l2(
         x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
     # trained_model, history = def_train_model.fully_connected_with_dropout_l2(
     #     x_train, x_val, y_train, y_val, MAX_WORDS, MAX_SEQUENCE_LEN, word_index)
