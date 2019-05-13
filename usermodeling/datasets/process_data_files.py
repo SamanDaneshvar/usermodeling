@@ -1,5 +1,7 @@
 """Load datasets from files and write related output files.
 
+Note: This is a legacy module from the PAN18AP project and does not follow all the conventions of the newer modules.
+
 This module loads the dataset of the Author Profiling task at PAN 2018 and pre-processes it.
 For more information refer to the docstring of the *load_pan_data* function.
 

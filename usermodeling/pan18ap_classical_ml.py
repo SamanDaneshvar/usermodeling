@@ -1,5 +1,7 @@
 """Train the model using classical machine learning algorithms.
 
+Note: This is a legacy module from the PAN18AP project and does not follow all the conventions of the newer modules.
+
 This script builds a gender classification model on the dataset of the Author Profiling task at the PAN 2018
 shared task. A linear Support Vector classifier is trained on text features.
 
@@ -825,7 +827,7 @@ def main_tira_evaluation():
         interpreter.exe script.py -c $inputDataset -o $outputDir
     
     For local testing on your machine, you can use the following command:
-        ~/python.exe ~/classical_ml.py -c $inputDataset -o $outputDir
+        ~/python.exe ~/pan18ap_classical_ml.py -c $inputDataset -o $outputDir
     Notes:
         - Replace $inputDataset and $outputDir.
         - Replace the ~ characters with the path of your Python interpreter and the path of this script.

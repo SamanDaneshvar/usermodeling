@@ -20,7 +20,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
-from usermodeling.classical_ml import preprocess_tweet
+from usermodeling.pan18ap_classical_ml import preprocess_tweet
 from usermodeling import datasets
 from usermodeling import def_train_model
 from usermodeling.utils import my_utils

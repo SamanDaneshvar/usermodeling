@@ -30,7 +30,7 @@ from polyglot.detect import Detector
 import numpy as np
 
 from usermodeling.utils import my_utils
-from usermodeling.classical_ml import preprocess_tweet
+from usermodeling.pan18ap_classical_ml import preprocess_tweet
 
 
 class Dataset:
