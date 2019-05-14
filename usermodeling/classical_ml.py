@@ -118,12 +118,12 @@ def extract_features_gender(docs_train, docs_val, docs_test_asi, docs_test_pan18
     # Build a vectorizer that splits strings into sequences of 1 to 3 words
     word_vectorizer = TfidfVectorizer(preprocessor=None,
                                       analyzer='word', ngram_range=(1, 3),
-                                      max_features=10 ** 6,
+                                      max_features=10 ** 5,
                                       min_df=2, use_idf=True, sublinear_tf=True)
     # Build a vectorizer that splits strings into sequences of 3 to 5 characters
     char_vectorizer = TfidfVectorizer(preprocessor=None,
                                       analyzer='char', ngram_range=(3, 5),
-                                      max_features=10 ** 6,
+                                      max_features=10 ** 5,
                                       min_df=2, use_idf=True, sublinear_tf=True)
 
     # Log the parameters of the word and character vectorizers
@@ -206,12 +206,12 @@ def extract_features_age(docs_train, docs_val, docs_test, lsa=True):
     # Build a vectorizer that splits strings into sequences of 1 to 3 words
     word_vectorizer = TfidfVectorizer(preprocessor=None,
                                       analyzer='word', ngram_range=(1, 3),
-                                      max_features=10 ** 6,
+                                      max_features=10 ** 7,
                                       min_df=2, use_idf=True, sublinear_tf=True)
     # Build a vectorizer that splits strings into sequences of 3 to 5 characters
     char_vectorizer = TfidfVectorizer(preprocessor=None,
                                       analyzer='char', ngram_range=(3, 5),
-                                      max_features=10 ** 6,
+                                      max_features=10 ** 7,
                                       min_df=2, use_idf=True, sublinear_tf=True)
 
     # Log the parameters of the word and character vectorizers
@@ -344,7 +344,7 @@ def test_model(trained_clf, x_test, y_test, TEST_SET_LABEL='test'):
 def main_gender():
     """The main function for gender classification experiments"""
 
-    logger.info('Experiment notes: --> Gender. max_features=10^6')
+    logger.info('Experiment notes: --> Gender. max_features=10^5')
 
     docs_train, docs_val, docs_test_asi, y_train, y_val, y_test_asi = load_split_asi_dataset(task='gender')
     docs_test_pan18ap, y_test_pan18ap = load_pan18ap_test_corpus()
@@ -365,7 +365,7 @@ def main_gender():
 def main_age():
     """The main function for age classification experiments"""
 
-    logger.info('Experiment notes: --> Age. max_features=10^6')
+    logger.info('Experiment notes: --> Age. max_features=10^7')
 
     docs_train, docs_val, docs_test, y_train, y_val, y_test = load_split_asi_dataset(task='age')
 
@@ -391,5 +391,5 @@ the main scope (the scope in which top-level code executes).
 if __name__ == '__main__':
     logger, RUN_TIMESTAMP = my_utils.configure_root_logger(1)
     my_utils.set_working_directory(1)
-    main_gender()
+    # main_gender()
     main_age()
