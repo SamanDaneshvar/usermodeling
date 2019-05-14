@@ -207,10 +207,10 @@ def plot_training_performance_from_pickle(run_timestamp_and_title, mode=None):
     # Set limits of the y axis for both subplots
     y1 = (0.5, 1)
     y2 = (0, 1.5)
-    # TEMP: Set the tick intervals of the y axis to 0.1 for the first subplot
-    y1_interval = 0.1
-    y1ticks = np.arange(y1[0] - y1_interval, y1[1] + 2 * y1_interval, y1_interval)
-    ax1.set_yticks(y1ticks)
+    # # TEMP: Set the tick intervals of the y axis to 0.1 for the first subplot
+    # y1_interval = 0.1
+    # y1ticks = np.arange(y1[0] - y1_interval, y1[1] + 2 * y1_interval, y1_interval)
+    # ax1.set_yticks(y1ticks)
     #
     y1_margin = 0.05 * (y1[1] - y1[0])
     y2_margin = 0.05 * (y2[1] - y2[0])
@@ -245,6 +245,7 @@ if __name__ == '__main__':
     logger = my_utils.configure_basic_logger()
     my_utils.set_working_directory(1)
     # legacy_func()
+    # history_to_tabular_string('2019-04-25_22-48-58 deep_learning __ ASI, fully connected + dropout + L2 regularization = 0.01')
 
     # plot_training_performance_from_pickle('2019-04-12_18-44-51 deep_learning __ ASI, basic fully connected model, maxlen=20k', mode='compute canada')
     # plot_training_performance_from_pickle('2019-04-12_18-07-33 deep_learning __ ASI, basic fully connected model, maxlen=2,644', mode='compute canada')
@@ -264,16 +265,14 @@ if __name__ == '__main__':
     # plot_training_performance_from_pickle('2019-04-26_00-39-31 deep_learning __ ”, max_words=10^5', mode='compute canada')
     # plot_training_performance_from_pickle('2019-04-26_11-24-49 deep_learning __ max_words=10^4, maxlen=2,644. embedding_dim=100', mode='compute canada')
 
-    # plot_training_performance_from_pickle('2019-04-09_21-22-52 deep_learning __ ASI, 22k users, maxlen=2,644', mode='compute canada')
-    # plot_training_performance_from_pickle('2019-03-30_00-59-55 deep_learning __ bidirectional LSTM, ASI')
-    # plot_training_performance_from_pickle('2019-04-26_16-03-39 deep_learning __ Bidirectional LSTM + dropout=0.2', mode='compute canada')
-    # plot_training_performance_from_pickle('2019-04-28_22-27-52 deep_learning __ Bidirectional LSTM + dropout=0.1')
-    #
-    # plot_training_performance_from_pickle('2019-04-29_16-31-28 deep_learning __ 2 bidiractional LSTM layers + dropout=0.1')
-    # plot_training_performance_from_pickle('2019-04-30_05-20-56 deep_learning __ [Duplicate] 2 bidiractional LSTM layers + dropout=0.1', mode='compute canada')
+    # # plot_training_performance_from_pickle('2019-04-09_21-22-52 deep_learning __ ASI, 22k users, maxlen=2,644', mode='compute canada')
+    plot_training_performance_from_pickle('2019-03-30_00-59-55 deep_learning __ ASI, bidirectional LSTM')
+    # # plot_training_performance_from_pickle('2019-04-26_16-03-39 deep_learning __ Bidirectional LSTM + dropout=0.2', mode='compute canada')
+    plot_training_performance_from_pickle('2019-04-28_22-27-52 deep_learning __ Bidirectional LSTM + dropout=0.1')
 
-    # plot_training_performance_from_pickle('2019-05-01_21-35-41 deep_learning __ ”, + input & recurrent L2 regularization = 0.001', mode='compute canada')
-    # plot_training_performance_from_pickle('2019-05-01_20-41-11 deep_learning __ ”, + input & recurrent L2 regularization = 0.01', mode='compute canada')
-    # plt.show()
+    plot_training_performance_from_pickle('2019-04-29_16-31-28 deep_learning __ 2 bidiractional LSTM layers + dropout=0.1')
+    # # plot_training_performance_from_pickle('2019-04-30_05-20-56 deep_learning __ [Duplicate] 2 bidiractional LSTM layers + dropout=0.1', mode='compute canada')
 
-    history_to_tabular_string('2019-04-12_18-06-59 deep_learning __ ASI, basic fully connected model')
+    plot_training_performance_from_pickle('2019-05-01_21-35-41 deep_learning __ ”, + input & recurrent L2 regularization = 0.001', mode='compute canada')
+    # # plot_training_performance_from_pickle('2019-05-01_20-41-11 deep_learning __ ”, + input & recurrent L2 regularization = 0.01', mode='compute canada')
+    plt.show()
