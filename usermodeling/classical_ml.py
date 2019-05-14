@@ -206,12 +206,12 @@ def extract_features_age(docs_train, docs_val, docs_test, lsa=True):
     # Build a vectorizer that splits strings into sequences of 1 to 3 words
     word_vectorizer = TfidfVectorizer(preprocessor=None,
                                       analyzer='word', ngram_range=(1, 3),
-                                      max_features=10 ** 7,
+                                      max_features=10 ** 5,
                                       min_df=2, use_idf=True, sublinear_tf=True)
     # Build a vectorizer that splits strings into sequences of 3 to 5 characters
     char_vectorizer = TfidfVectorizer(preprocessor=None,
                                       analyzer='char', ngram_range=(3, 5),
-                                      max_features=10 ** 7,
+                                      max_features=10 ** 5,
                                       min_df=2, use_idf=True, sublinear_tf=True)
 
     # Log the parameters of the word and character vectorizers
@@ -365,12 +365,12 @@ def main_gender():
 def main_age():
     """The main function for age classification experiments"""
 
-    logger.info('Experiment notes: --> Age. max_features=10^7')
+    logger.info('Experiment notes: --> Age. max_features=10^5. No LSA')
 
     docs_train, docs_val, docs_test, y_train, y_val, y_test = load_split_asi_dataset(task='age')
 
     (x_train, x_val, x_test,
-     feature_names_ngrams) = extract_features_age(docs_train, docs_val, docs_test, lsa=True)
+     feature_names_ngrams) = extract_features_age(docs_train, docs_val, docs_test, lsa=False)
 
     trained_clf = def_train_model(x_train, y_train)
 
