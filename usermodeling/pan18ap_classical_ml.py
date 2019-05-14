@@ -670,14 +670,23 @@ def train_and_test_model(clf, X_train, y_train, X_test, y_test):
                 time.process_time())
 
     # Simple evaluation using numpy.mean
-    logger.info("np.mean %%Accuracy: %f", np.mean(y_predicted == y_test) * 100)
+    logger.info(">> np.mean %%Accuracy: %f", np.mean(y_predicted == y_test) * 100)
 
     # Log the classification report
-    logger.info("Classification report:\n%s", metrics.classification_report(y_test, y_predicted))
+    classification_report = metrics.classification_report(y_test, y_predicted)
+    logger.info(">> Classification report:")
+    # Break the multi-line string into a list of lines and pass the lines one by one to the logger
+    lines = classification_report.splitlines()
+    for line in lines:
+        logger.info(line)
 
     # Log the confusion matrix
     confusion_matrix = metrics.confusion_matrix(y_test, y_predicted)
-    logger.info("Confusion matrix:\n%s", confusion_matrix)
+    logger.info(">> Confusion matrix:")
+    # Convert the ndarray object to string, split it into a list of lines and pass the lines one by one to the logger
+    lines = str(confusion_matrix).splitlines()
+    for line in lines:
+        logger.info(line)
 
     # # Plot the confusion matrix
     # plt.matshow(confusion_matrix)
