@@ -195,8 +195,81 @@ def extract_features_gender(docs_train, docs_val, docs_test_asi, docs_test_pan18
 
 
 def extract_features_age(docs_train, docs_val, docs_test, lsa=True):
-    """%%%"""
-    pass
+    """Extract features
+
+    This is basically a duplicate of the *extract_features_gender()* function, except that it does not use the
+    PAN18AP test corpus as a second test set.
+    """
+
+    # Build a vectorizer that splits strings into sequences of 1 to 3 words
+    word_vectorizer = TfidfVectorizer(preprocessor=None,
+                                      analyzer='word', ngram_range=(1, 3),
+                                      min_df=2, use_idf=True, sublinear_tf=True)
+    # Build a vectorizer that splits strings into sequences of 3 to 5 characters
+    char_vectorizer = TfidfVectorizer(preprocessor=None,
+                                      analyzer='char', ngram_range=(3, 5),
+                                      min_df=2, use_idf=True, sublinear_tf=True)
+
+    # Log the parameters of the word and character vectorizers
+    logger.info('word_vectorizer: %s', word_vectorizer.get_params())
+    logger.info('char_vectorizer: %s', char_vectorizer.get_params())
+
+    # Build a transformer (vectorizer) pipeline using the previous analyzers
+    # *FeatureUnion* concatenates results of multiple transformer objects
+    ngrams_vectorizer = Pipeline([('feats', FeatureUnion([('word_ngram', word_vectorizer),
+                                                          ('char_ngram', char_vectorizer)]))])
+
+    # Fit (learn vocabulary and IDF) and transform (transform documents to the TF-IDF matrix) the training set
+    x_train_ngrams_tfidf = ngrams_vectorizer.fit_transform(docs_train)
+    '''
+    ↳ Check the following attributes of each of the transformers (analyzers)—*word_vectorizer* and *char_vectorizer*:
+    vocabulary_ : dict. A mapping of terms to feature indices.
+    stop_words_ : set. Terms that were ignored
+    '''
+    logger.info('@ %.2f seconds: Finished fit_transforming the training dataset', time.process_time())
+
+    feature_names_ngrams = [word_vectorizer.vocabulary_, char_vectorizer.vocabulary_]
+    logger.info('Size of vocabulary: %s words | %s characters',
+                format(len(word_vectorizer.vocabulary_), ',d'),
+                format(len(char_vectorizer.vocabulary_), ',d'))
+
+    # Vectorize each validation/test set
+    # Extract the features of the validation/test sets (transform test documents to the TF-IDF matrix)
+    # Only transform is called on the transformer (vectorizer), because it has already been fit to the training set.
+    x_val_ngrams_tfidf = ngrams_vectorizer.transform(docs_val)
+    logger.info('@ %.2f seconds: Finished transforming the validation set', time.process_time())
+    x_test_ngrams_tfidf = ngrams_vectorizer.transform(docs_test)
+    logger.info('@ %.2f seconds: Finished transforming the test set', time.process_time())
+
+    logger.info('Word & character ngrams .shape = {training: %s | validation: %s | test: %s}',
+                x_train_ngrams_tfidf.shape, x_val_ngrams_tfidf.shape, x_test_ngrams_tfidf.shape)
+
+    # • Dimensionality reduction using truncated SVD (aka LSA)
+    if lsa:
+        # Build a truncated SVD (LSA) transformer object
+        svd = TruncatedSVD(n_components=300, random_state=43)
+        # Fit the LSA model and perform dimensionality reduction on the training set
+        x_train_ngrams_tfidf_reduced = svd.fit_transform(x_train_ngrams_tfidf)
+        logger.info('@ %.2f seconds: Finished dimensionality reduction (LSA) on the training set',
+                    time.process_time())
+        # Perform dimensionality reduction on the validation and test sets
+        # Note that the SVD (LSA) transformer is already fit on the training set
+        x_val_ngrams_tfidf_reduced = svd.transform(x_val_ngrams_tfidf)
+        logger.info('@ %.2f seconds: Finished dimensionality reduction (LSA) on the validation set',
+                    time.process_time())
+        x_test_ngrams_tfidf_reduced = svd.transform(x_test_ngrams_tfidf)
+        logger.info('@ %.2f seconds: Finished dimensionality reduction (LSA) on the test set',
+                    time.process_time())
+
+        x_train = x_train_ngrams_tfidf_reduced
+        x_val = x_val_ngrams_tfidf_reduced
+        x_test = x_test_ngrams_tfidf_reduced
+    else:
+        x_train = x_train_ngrams_tfidf
+        x_val = x_val_ngrams_tfidf
+        x_test = x_test_ngrams_tfidf
+
+    return x_train, x_val, x_test, feature_names_ngrams
 
 
 def def_train_model(x_train, y_train):
@@ -254,6 +327,8 @@ def test_model(trained_clf, x_test, y_test, TEST_SET_LABEL='test'):
         logger.info(line)
 
     # Log the confusion matrix
+    # TODO: Improve the confusion matrix (row and column labels, etc.) %%
+    # https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html#sphx-glr-auto-examples-model-selection-plot-confusion-matrix-py
     confusion_matrix = metrics.confusion_matrix(y_test, y_predicted)
     logger.info('>> Confusion matrix:')
     # Convert the ndarray object to string, split it into a list of lines and pass the lines one by one to the logger
@@ -284,7 +359,22 @@ def main_gender():
 
 
 def main_age():
-    """The main function for age classification experiments %%%"""
+    """The main function for age classification experiments"""
+
+    logger.info('Experiment notes: --')
+
+    docs_train, docs_val, docs_test, y_train, y_val, y_test = load_split_asi_dataset(task='age')
+
+    (x_train, x_val, x_test,
+     feature_names_ngrams) = extract_features_age(docs_train, docs_val, docs_test, lsa=True)
+
+    trained_clf = def_train_model(x_train, y_train)
+
+    test_model(trained_clf, x_val, y_val, TEST_SET_LABEL='validation')
+    test_model(trained_clf, x_test, y_test, TEST_SET_LABEL='test')
+
+    # Log run time
+    logger.info('@ %.2f seconds: Run finished', time.process_time())
 
 
 ''' 
@@ -298,3 +388,4 @@ if __name__ == '__main__':
     logger, RUN_TIMESTAMP = my_utils.configure_root_logger(1)
     my_utils.set_working_directory(1)
     main_gender()
+    # main_age()
