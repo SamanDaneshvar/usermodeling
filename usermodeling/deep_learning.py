@@ -20,9 +20,9 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
-from usermodeling.pan18ap_classical_ml import preprocess_tweet
 from usermodeling import datasets
 from usermodeling import def_train_model
+from usermodeling.pan18ap_classical_ml import preprocess_tweet
 from usermodeling.utils import my_utils
 
 # Change the level of the loggers of some of the imported modules
@@ -147,14 +147,14 @@ def _load_pan18ap_test_corpus():
     - Load the English test corpus of the PAN 2018 Author Profiling task
     - Pre-process the raw text (replace URLs, etc.)
 
-    This is used as a second test set for experiments on the ASI dataset.
+    This is used as a second test set for age classification experiments on the ASI dataset.
     """
 
     XMLS_DIRECTORY = 'data/PAN 2018, Author Profiling - Test Corpus/en/text'
     TRUTH_PATH = 'data/PAN 2018, Author Profiling - Test Corpus/en/en.txt'
 
     # Load the raw texts and the labels (truths) from the files into lists
-    merged_tweets, text_labels, author_ids, original_tweet_lengths = \
+    merged_tweets, text_labels, author_ids, _ignore = \
         datasets.process_data_files.load_pan_data(XMLS_DIRECTORY, TRUTH_PATH)
 
     # Map textual labels to numeric labels:

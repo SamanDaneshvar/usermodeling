@@ -23,9 +23,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from nltk.tokenize.casual import TweetTokenizer
 from nltk.tokenize.treebank import TreebankWordDetokenizer
-from sklearn import metrics
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer, TfidfTransformer
+from sklearn import metrics
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
@@ -220,8 +220,8 @@ def preprocess_tweet(tweet, replacement_tags=True, output_mode='single'):
         return processed_tweet, num_tokens, num_words, replaced_urls, replaced_mentions
 
 
-def extract_features(docs_train, docs_test, preset_key):
-    """Extract features
+def extract_features_and_build_classifier(docs_train, docs_test, preset_key):
+    """Extract features and build a classifier
 
     This function builds a transformer (vectorizer) pipeline,
     fits the transformer to the training set (learns vocabulary and idf),
@@ -293,8 +293,8 @@ def extract_features(docs_train, docs_test, preset_key):
     # • Dimensionality reduction using truncated SVD (aka LSA)
     if PRESET['perform_dimentionality_reduction']:
         # Build a truncated SVD (LSA) transformer object
-        svd = TruncatedSVD(n_components=300, random_state=42)
-        # Fit the LSI model and perform dimensionality reduction
+        svd = TruncatedSVD(n_components=300, random_state=43)
+        # Fit the LSA model and perform dimensionality reduction
         X_train_ngrams_tfidf_reduced = svd.fit_transform(X_train_ngrams_tfidf)
         logger.info("@ %.2f seconds: Finished dimensionality reduction (LSA) on the training dataset", time.process_time())
         X_test_ngrams_tfidf_reduced = svd.transform(X_test_ngrams_tfidf)
@@ -413,7 +413,7 @@ def extract_features_offensive_words(docs_train, docs_test):
 
     # • Dimensionality reduction using truncated SVD (aka LSA)
     # Build a truncated SVD (LSA) transformer object
-    svd_offensive_words = TruncatedSVD(n_components=10, random_state=42)
+    svd_offensive_words = TruncatedSVD(n_components=10, random_state=43)
     # Fit the LSI model and perform dimensionality reduction
     x_train_offensive_words_tfidf_reduced = svd_offensive_words.fit_transform(X_train_offensive_words_tfidf)
     logger.info("@ %.2f seconds: Finished dimensionality reduction (LSA) in *extract_features_offensive_words()* on "
@@ -679,10 +679,10 @@ def train_and_test_model(clf, X_train, y_train, X_test, y_test):
     confusion_matrix = metrics.confusion_matrix(y_test, y_predicted)
     logger.info("Confusion matrix:\n%s", confusion_matrix)
 
-    # Plot the confusion matrix
-    plt.matshow(confusion_matrix)
-    plt.set_cmap('jet')
-    plt.show()
+    # # Plot the confusion matrix
+    # plt.matshow(confusion_matrix)
+    # plt.set_cmap('jet')
+    # plt.show()
 
 
 def train_model_and_predict(clf, X_train, y_train, X_test, author_ids_test, preset_key,
@@ -802,7 +802,7 @@ def main_development():
         logger.info("Running main_development() for preset: %s", presetKey)
 
         docs_train, docs_test, y_train, y_test = load_datasets_development(presetKey)
-        X_train, X_test, clf, feature_names = extract_features(docs_train, docs_test, presetKey)
+        X_train, X_test, clf, feature_names = extract_features_and_build_classifier(docs_train, docs_test, presetKey)
         cross_validate_model(clf, X_train, y_train)
         train_and_test_model(clf, X_train, y_train, X_test, y_test)
 
@@ -865,7 +865,7 @@ def main_tira_evaluation():
         # y_train = y_train[:100]
         # author_ids_test = author_ids_test[:100]
 
-        X_train, X_test, clf, feature_names = extract_features(docs_train, docs_test, preset_key)
+        X_train, X_test, clf, feature_names = extract_features_and_build_classifier(docs_train, docs_test, preset_key)
         cross_validate_model(clf, X_train, y_train)
         train_model_and_predict(clf, X_train, y_train, X_test, author_ids_test, preset_key,
                                 True, prediction_xmls_destination_main_directory)
