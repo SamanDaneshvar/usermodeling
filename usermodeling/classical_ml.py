@@ -24,6 +24,18 @@ def load_split_asi_dataset(task):
     - Load the preprocessed dataset (URLs and username mentions removed, repeated characters normalized,
         lowercased, etc.)
     - Split the dataset into balanced (stratified) training (60%), validation (20%), and test (20%) sets
+
+    Args:
+        task <string>: Takes values of 'gender' and 'age'. Depending on the task, a stratified subset of the
+        ASI dataset will be loaded (stratified on the gender/age labels), and the corresponding labels (gender/age)
+        will be returned.
+    Returns:
+        docs_train
+        docs_val
+        docs_test
+        y_train
+        y_val
+        y_test
     """
 
     LABELS_XML_PATH = 'data/Advanced Symbolics/Labels.xml'
@@ -104,13 +116,17 @@ def extract_features_gender(docs_train, docs_val, docs_test_asi, docs_test_pan18
     """
 
     # Build a vectorizer that splits strings into sequences of 1 to 3 words
-    word_vectorizer = TfidfVectorizer(preprocessor=preprocess_tweet,
+    word_vectorizer = TfidfVectorizer(preprocessor=None,
                                       analyzer='word', ngram_range=(1, 3),
                                       min_df=2, use_idf=True, sublinear_tf=True)
     # Build a vectorizer that splits strings into sequences of 3 to 5 characters
-    char_vectorizer = TfidfVectorizer(preprocessor=preprocess_tweet,
+    char_vectorizer = TfidfVectorizer(preprocessor=None,
                                       analyzer='char', ngram_range=(3, 5),
                                       min_df=2, use_idf=True, sublinear_tf=True)
+
+    # Log the parameters of the word and character vectorizers
+    logger.info('word_vectorizer: %s', word_vectorizer.get_params())
+    logger.info('char_vectorizer: %s', char_vectorizer.get_params())
 
     # Build a transformer (vectorizer) pipeline using the previous analyzers
     # *FeatureUnion* concatenates results of multiple transformer objects
@@ -127,6 +143,9 @@ def extract_features_gender(docs_train, docs_val, docs_test_asi, docs_test_pan18
     logger.info('@ %.2f seconds: Finished fit_transforming the training dataset', time.process_time())
 
     feature_names_ngrams = [word_vectorizer.vocabulary_, char_vectorizer.vocabulary_]
+    logger.info('Size of vocabulary: %s words | %s characters',
+                format(len(word_vectorizer.vocabulary_), ',d'),
+                format(len(char_vectorizer.vocabulary_), ',d'))
 
     # Vectorize each validation/test set
     # Extract the features of the validation/test sets (transform test documents to the TF-IDF matrix)
