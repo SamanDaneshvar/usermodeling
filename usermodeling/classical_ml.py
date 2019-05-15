@@ -331,10 +331,9 @@ def test_model(trained_clf, x_test, y_test, TEST_SET_LABEL='test'):
         logger.info(line)
 
     # Log the confusion matrix
-    # TODO: Improve the confusion matrix (row and column labels, etc.) %%
-    # https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html#sphx-glr-auto-examples-model-selection-plot-confusion-matrix-py
     confusion_matrix = metrics.confusion_matrix(y_test, y_predicted)
-    logger.info('>> Confusion matrix:')
+    logger.info('>> Confusion matrix: (rows represent the actual class, and columns represent the predicted class, '
+                'as shown at https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html)')
     # Convert the ndarray object to string, split it into a list of lines and pass the lines one by one to the logger
     lines = str(confusion_matrix).splitlines()
     for line in lines:
