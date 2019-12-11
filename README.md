@@ -6,7 +6,7 @@ Identified characteristics of social media users, namely gender and age, by trai
 * Achieved 79.6% validation accuracy with a feedforward neural network consisting of word embedding, flattening, and two densely-connected layers.
 * Achieved 76.9% accuracy with a bidirectional LSTM architecture.
 
-A thesis submitted in conformity with the requirements for the degree of
+A thesis submitted in conformity with the requirements for the degree of:
 ```
 Master of Science
 School of Electrical Engineering and Computer Science
