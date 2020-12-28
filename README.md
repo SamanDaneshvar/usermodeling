@@ -1,5 +1,4 @@
-# usermodeling
-**User Modeling in Social Media: Gender and Age Detection**
+# User Modeling in Social Media: Gender and Age Detection
 
 Identified characteristics of social media users, namely gender and age, by training deep learning (including vanilla RNN and LSTM) and classical machine learning models (including SVM and logistic regression) on the textual posts they have shared on Twitter.
 
