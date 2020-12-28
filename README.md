@@ -15,3 +15,6 @@ University of Ottawa
 ```
 
 Research funded by a grant from Natural Sciences and Engineering Research Council of Canada (NSERC).
+
+## Related Projects
+[PAN 2018, Author Profiling task (pan18ap)](https://github.com/SamanDaneshvar/pan18ap)
